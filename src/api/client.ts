@@ -252,7 +252,10 @@ export const api = {
   chatSend: (message: string) =>
     apiFetch<ChatMessage>("/chat/send", {
       method: "POST",
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({
+        message,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      }),
     }),
   chatUndo: (message_id: string, action_index = 0) =>
     apiFetch<{ ok: boolean }>("/chat/undo", {
