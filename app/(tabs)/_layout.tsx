@@ -1,23 +1,22 @@
 import { Tabs } from "expo-router";
 import { Text } from "react-native";
 
-import { colors } from "../../src/theme/tokens";
+import { useTheme } from "../../src/theme/ThemeContext";
 
-function TabLabel({ label, focused }: { label: string; focused: boolean }) {
+function TabLabel({ label, focused, color, muted }: { label: string; focused: boolean; color: string; muted: string }) {
   return (
-    <Text style={{ color: focused ? colors.ink : colors.muted, fontSize: 12, fontWeight: "600" }}>
-      {label}
-    </Text>
+    <Text style={{ color: focused ? color : muted, fontSize: 12, fontWeight: "600" }}>{label}</Text>
   );
 }
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.bgSoft,
+          backgroundColor: colors.card,
           borderTopColor: colors.line,
           height: 64,
           paddingBottom: 8,
@@ -31,28 +30,36 @@ export default function TabsLayout() {
         name="home"
         options={{
           title: "Home",
-          tabBarIcon: ({ focused }) => <TabLabel label="◎" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabLabel label="◎" focused={focused} color={colors.ink} muted={colors.muted} />
+          ),
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
-          title: "Calendar",
-          tabBarIcon: ({ focused }) => <TabLabel label="▦" focused={focused} />,
+          title: "Plan",
+          tabBarIcon: ({ focused }) => (
+            <TabLabel label="▦" focused={focused} color={colors.ink} muted={colors.muted} />
+          ),
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
           title: "Tasks",
-          tabBarIcon: ({ focused }) => <TabLabel label="✓" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabLabel label="✓" focused={focused} color={colors.ink} muted={colors.muted} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ focused }) => <TabLabel label="◍" focused={focused} />,
+          tabBarIcon: ({ focused }) => (
+            <TabLabel label="◍" focused={focused} color={colors.ink} muted={colors.muted} />
+          ),
         }}
       />
     </Tabs>

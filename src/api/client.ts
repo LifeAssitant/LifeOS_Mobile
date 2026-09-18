@@ -166,6 +166,7 @@ export type User = {
   quiet_hours_enabled: boolean;
   quiet_hours_start: string | null;
   quiet_hours_end: string | null;
+  google_calendar_connected?: boolean;
 };
 
 export type Task = {
@@ -175,7 +176,7 @@ export type Task = {
   due_at: string | null;
   remind_at: string | null;
   status: "open" | "done";
-  source: "chat" | "manual";
+  source: "chat" | "manual" | "google";
   completed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -189,7 +190,8 @@ export type EventItem = {
   start_at: string;
   end_at: string | null;
   remind_at: string | null;
-  source: "chat" | "manual";
+  source: "chat" | "manual" | "google";
+  external_id?: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -221,6 +223,12 @@ export const api = {
       { method: "POST", body: JSON.stringify({ email, password }) },
       false
     ),
+  loginWithGoogle: (access_token: string) =>
+    apiFetch<TokenPair>(
+      "/auth/google",
+      { method: "POST", body: JSON.stringify({ access_token }) },
+      false
+    ),
   me: () => apiFetch<User>("/me"),
   updateMe: (body: Partial<User> & Record<string, unknown>) =>
     apiFetch<User>("/me", { method: "PATCH", body: JSON.stringify(body) }),
@@ -248,6 +256,8 @@ export const api = {
     end_at?: string;
     location?: string;
   }) => apiFetch<EventItem>("/events", { method: "POST", body: JSON.stringify(body) }),
+  deleteEvent: (id: string) =>
+    apiFetch<void>(`/events/${id}`, { method: "DELETE" }),
   chatHistory: () => apiFetch<ChatMessage[]>("/chat/messages"),
   chatSend: (message: string) =>
     apiFetch<ChatMessage>("/chat/send", {
@@ -264,4 +274,14 @@ export const api = {
     }),
   checkout: () =>
     apiFetch<{ checkout_url: string }>("/billing/checkout", { method: "POST" }),
+  googleCalendarStatus: () =>
+    apiFetch<{ connected: boolean }>("/calendar/google/status"),
+  googleCalendarConnect: () =>
+    apiFetch<{ url: string }>("/calendar/google/connect"),
+  googleCalendarSync: () =>
+    apiFetch<{ synced: number; removed: number }>("/calendar/google/sync", {
+      method: "POST",
+    }),
+  googleCalendarDisconnect: () =>
+    apiFetch<{ connected: boolean }>("/calendar/google", { method: "DELETE" }),
 };
