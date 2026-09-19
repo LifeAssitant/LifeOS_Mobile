@@ -1,3 +1,11 @@
+import { Baloo2_600SemiBold, Baloo2_700Bold } from "@expo-google-fonts/baloo-2";
+import {
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+  Outfit_700Bold,
+  useFonts,
+} from "@expo-google-fonts/outfit";
 import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -9,7 +17,7 @@ import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  const { colors, scheme } = useTheme();
+  const { colors, theme } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -39,15 +47,22 @@ function Guard({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.warm} />
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: colors.bg,
+        }}
+      >
+        <ActivityIndicator color={colors.accent} />
       </View>
     );
   }
 
   return (
     <>
-      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      <StatusBar style={theme === "professional" ? "light" : "dark"} />
       {children}
     </>
   );
@@ -57,12 +72,25 @@ function ThemedStack() {
   const { colors } = useTheme();
   return (
     <Guard>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
+      />
     </Guard>
   );
 }
 
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Outfit_400Regular,
+    Outfit_500Medium,
+    Outfit_600SemiBold,
+    Outfit_700Bold,
+    Baloo2_600SemiBold,
+    Baloo2_700Bold,
+  });
+
+  if (!fontsLoaded) return null;
+
   return (
     <ThemeProvider>
       <AuthProvider>

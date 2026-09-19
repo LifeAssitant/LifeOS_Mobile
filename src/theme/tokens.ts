@@ -1,135 +1,155 @@
-export type ThemeStyle = "clay" | "glass";
+import type { TextStyle, ViewStyle } from "react-native";
+
+export type ThemeName = "playful" | "professional";
+
+/** @deprecated use ThemeName */
+export type ThemeStyle = ThemeName;
+/** @deprecated the app no longer has a separate light/dark switch */
 export type ColorScheme = "light" | "dark";
 
 export type ThemeColors = {
   bg: string;
   bgSoft: string;
-  bgDeep: string;
-  card: string;
-  cardStrong: string;
+  surface: string;
+  surface2: string;
   ink: string;
+  inkSoft: string;
   muted: string;
   line: string;
+  lineSoft: string;
   accent: string;
+  accentInk: string;
   accentSoft: string;
-  warm: string;
-  warmSoft: string;
+  mint: string;
+  mintSoft: string;
+  peach: string;
+  peachSoft: string;
+  sky: string;
   skySoft: string;
+  lilac: string;
+  lilacSoft: string;
+  butter: string;
+  butterSoft: string;
   danger: string;
   dangerSoft: string;
-  shadow: string;
-  highlight: string;
-  shade: string;
-  well: string;
   input: string;
-  glassBorder: string;
+  /** Clay lighting: bright inner top edge, dark inner bottom edge. */
+  clayHi: string;
+  clayLo: string;
+  onAccentHi: string;
+  onAccentLo: string;
+  shadowColor: string;
+  shadowOpacity: number;
+  /** legacy aliases kept so older call sites keep compiling */
+  card: string;
+  cardStrong: string;
+  warm: string;
+  warmSoft: string;
+  well: string;
 };
 
-const palettes: Record<ThemeStyle, Record<ColorScheme, ThemeColors>> = {
-  clay: {
-    light: {
-      bg: "#ede8e2",
-      bgSoft: "#f7f4ef",
-      bgDeep: "#e4ddd4",
-      card: "#fffcfa",
-      cardStrong: "#fff8f3",
-      ink: "#1c1917",
-      muted: "#78716c",
-      line: "rgba(28,25,23,0.1)",
-      accent: "#3d8b74",
-      accentSoft: "#d7ede5",
-      warm: "#d4895a",
-      warmSoft: "#f3e0d2",
-      skySoft: "#dce8ef",
-      danger: "#c45c5c",
-      dangerSoft: "#f0d4d4",
-      shadow: "rgba(28,25,23,0.09)",
-      highlight: "rgba(255,255,255,0.78)",
-      shade: "rgba(28,25,23,0.055)",
-      well: "rgba(237,232,226,0.55)",
-      input: "#f0ebe5",
-      glassBorder: "transparent",
-    },
-    dark: {
-      bg: "#1a1816",
-      bgSoft: "#24211e",
-      bgDeep: "#121110",
-      card: "#2c2825",
-      cardStrong: "#322e2a",
-      ink: "#f5f0ea",
-      muted: "#a8a29e",
-      line: "rgba(245,240,234,0.1)",
-      accent: "#5cb89a",
-      accentSoft: "#1e3d34",
-      warm: "#e09a6a",
-      warmSoft: "#3d2e24",
-      skySoft: "#1e2c35",
-      danger: "#e07a7a",
-      dangerSoft: "#3d2424",
-      shadow: "rgba(0,0,0,0.45)",
-      highlight: "rgba(255,255,255,0.08)",
-      shade: "rgba(0,0,0,0.35)",
-      well: "rgba(18,17,16,0.55)",
-      input: "#221f1c",
-      glassBorder: "rgba(255,255,255,0.08)",
-    },
-  },
-  glass: {
-    light: {
-      bg: "#e8eef2",
-      bgSoft: "#f3f6f8",
-      bgDeep: "#dde7ed",
-      card: "rgba(255,252,250,0.85)",
-      cardStrong: "rgba(255,255,255,0.92)",
-      ink: "#152028",
-      muted: "#6b7c88",
-      line: "rgba(21,32,40,0.1)",
-      accent: "#3d8b74",
-      accentSoft: "rgba(61,139,116,0.18)",
-      warm: "#d4895a",
-      warmSoft: "rgba(212,137,90,0.18)",
-      skySoft: "rgba(90,143,173,0.2)",
-      danger: "#c45c5c",
-      dangerSoft: "rgba(196,92,92,0.18)",
-      shadow: "rgba(28,40,50,0.1)",
-      highlight: "rgba(255,255,255,0.65)",
-      shade: "rgba(28,40,50,0.06)",
-      well: "rgba(255,255,255,0.35)",
-      input: "rgba(255,255,255,0.5)",
-      glassBorder: "rgba(255,255,255,0.55)",
-    },
-    dark: {
-      bg: "#0c1218",
-      bgSoft: "#141c26",
-      bgDeep: "#080c10",
-      card: "rgba(24,32,44,0.88)",
-      cardStrong: "rgba(32,42,56,0.92)",
-      ink: "#eef4f8",
-      muted: "#8fa0ad",
-      line: "rgba(238,244,248,0.12)",
-      accent: "#5cb89a",
-      accentSoft: "rgba(92,184,154,0.2)",
-      warm: "#e09a6a",
-      warmSoft: "rgba(224,154,106,0.2)",
-      skySoft: "rgba(107,168,201,0.22)",
-      danger: "#e07a7a",
-      dangerSoft: "rgba(224,122,122,0.2)",
-      shadow: "rgba(0,0,0,0.45)",
-      highlight: "rgba(255,255,255,0.12)",
-      shade: "rgba(0,0,0,0.3)",
-      well: "rgba(8,12,18,0.45)",
-      input: "rgba(12,18,26,0.55)",
-      glassBorder: "rgba(255,255,255,0.14)",
-    },
-  },
+const playful: ThemeColors = {
+  bg: "#fdf1e3",
+  bgSoft: "#fffaf3",
+  surface: "#fffaf4",
+  surface2: "#fff3e8",
+  ink: "#45384a",
+  inkSoft: "#5f5068",
+  muted: "#92849c",
+  line: "rgba(69,56,74,0.08)",
+  lineSoft: "rgba(69,56,74,0.045)",
+  accent: "#f4846f",
+  accentInk: "#ffffff",
+  accentSoft: "#ffe0d6",
+  mint: "#45bfa3",
+  mintSoft: "#d2f2e8",
+  peach: "#f39a78",
+  peachSoft: "#ffe4d5",
+  sky: "#5fa9e6",
+  skySoft: "#d8eafb",
+  lilac: "#9b86e8",
+  lilacSoft: "#e7e0fc",
+  butter: "#edb64e",
+  butterSoft: "#fceecb",
+  danger: "#e06a6a",
+  dangerSoft: "#fbdcdc",
+  input: "#fdf0e4",
+  clayHi: "rgba(255,255,255,0.95)",
+  clayLo: "rgba(176,138,146,0.22)",
+  onAccentHi: "rgba(255,255,255,0.5)",
+  onAccentLo: "rgba(120,60,50,0.22)",
+  shadowColor: "#96707a",
+  shadowOpacity: 0.28,
+  card: "#fffaf4",
+  cardStrong: "#fff3e8",
+  warm: "#f4846f",
+  warmSoft: "#ffe0d6",
+  well: "#fdf0e4",
 };
 
-/** @deprecated Prefer useTheme().colors — defaults to clay light */
-export const colors = palettes.clay.light;
+const professional: ThemeColors = {
+  bg: "#0e100f",
+  bgSoft: "#141716",
+  surface: "#1a1e1c",
+  surface2: "#212623",
+  ink: "#f1f3f2",
+  inkSoft: "#c6cdc9",
+  muted: "#8a938e",
+  line: "rgba(241,243,242,0.07)",
+  lineSoft: "rgba(241,243,242,0.04)",
+  accent: "#e9ece9",
+  accentInk: "#141716",
+  accentSoft: "#272d2a",
+  mint: "#9fb3a8",
+  mintSoft: "#212724",
+  peach: "#b2a79c",
+  peachSoft: "#26221f",
+  sky: "#98a7ad",
+  skySoft: "#1f2527",
+  lilac: "#a4a1ad",
+  lilacSoft: "#232329",
+  butter: "#b8ae97",
+  butterSoft: "#26231d",
+  danger: "#e08585",
+  dangerSoft: "#2e2020",
+  input: "#151917",
+  clayHi: "rgba(255,255,255,0.07)",
+  clayLo: "rgba(0,0,0,0.55)",
+  onAccentHi: "rgba(255,255,255,0.85)",
+  onAccentLo: "rgba(0,0,0,0.18)",
+  shadowColor: "#000000",
+  shadowOpacity: 0.6,
+  card: "#1a1e1c",
+  cardStrong: "#212623",
+  warm: "#e9ece9",
+  warmSoft: "#272d2a",
+  well: "#151917",
+};
 
-export function getPalette(style: ThemeStyle, scheme: ColorScheme): ThemeColors {
-  return palettes[style][scheme];
+const palettes: Record<ThemeName, ThemeColors> = { playful, professional };
+
+export function getPalette(theme: ThemeName): ThemeColors {
+  return palettes[theme];
 }
+
+/** @deprecated prefer useTheme().colors */
+export const colors = playful;
+
+export const THEME_KEY = "lifeos_theme";
+/** legacy keys, read once so existing installs migrate cleanly */
+export const LEGACY_STYLE_KEY = "lifeos_theme_mode";
+export const LEGACY_SCHEME_KEY = "lifeos_color_scheme";
+
+export function normalizeTheme(raw: string | null): ThemeName {
+  if (raw === "playful" || raw === "professional") return raw;
+  if (raw === "glass" || raw === "ocean") return "professional";
+  return "playful";
+}
+
+export const THEMES: Array<{ id: ThemeName; label: string; hint: string }> = [
+  { id: "playful", label: "Playful", hint: "Soft pastels, rounded, bright" },
+  { id: "professional", label: "Professional", hint: "Graphite, monochrome, focused" },
+];
 
 export const spacing = {
   xs: 4,
@@ -139,61 +159,129 @@ export const spacing = {
   xl: 32,
 };
 
-export const radii = {
-  sm: 14,
-  md: 18,
-  lg: 24,
-  xl: 28,
-  pill: 999,
+/** Playful is rounder than professional, matching the desktop build. */
+export function getRadii(theme: ThemeName) {
+  return theme === "playful"
+    ? { sm: 14, md: 18, lg: 26, xl: 32, pill: 999 }
+    : { sm: 12, md: 16, lg: 22, xl: 26, pill: 999 };
+}
+
+/** @deprecated use getRadii(theme) */
+export const radii = getRadii("playful");
+
+export type ThemeFonts = {
+  display: string;
+  body: string;
+  medium: string;
+  semibold: string;
+  bold: string;
 };
 
-export const typography = {
-  brand: {
-    fontFamily: "System",
-    fontSize: 36,
-    fontWeight: "700" as const,
-    letterSpacing: -0.8,
-  },
-  title: {
-    fontFamily: "System",
-    fontSize: 22,
-    fontWeight: "700" as const,
-    letterSpacing: -0.3,
-  },
-  body: {
-    fontFamily: "System",
-    fontSize: 15,
-    fontWeight: "400" as const,
-  },
-  caption: {
-    fontFamily: "System",
-    fontSize: 12,
-    fontWeight: "600" as const,
-  },
-};
-
-export const THEME_STYLE_KEY = "lifeos_theme_mode";
-export const THEME_SCHEME_KEY = "lifeos_color_scheme";
-
-export function clayShadow(style: ThemeStyle, c: ThemeColors) {
-  if (style === "glass") {
-    return {
-      borderWidth: 1,
-      borderColor: c.glassBorder,
-      shadowColor: "#000",
-      shadowOpacity: 0.12,
-      shadowRadius: 18,
-      shadowOffset: { width: 0, height: 10 },
-      elevation: 6,
-    };
-  }
+export function getFonts(theme: ThemeName): ThemeFonts {
   return {
-    borderWidth: 0,
-    borderColor: "transparent",
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 5,
+    display: theme === "playful" ? "Baloo2_700Bold" : "Outfit_600SemiBold",
+    body: "Outfit_400Regular",
+    medium: "Outfit_500Medium",
+    semibold: "Outfit_600SemiBold",
+    bold: "Outfit_700Bold",
   };
+}
+
+export function getTypography(theme: ThemeName) {
+  const f = getFonts(theme);
+  const displayTracking = theme === "playful" ? -0.2 : -0.6;
+  return {
+    display: {
+      fontFamily: f.display,
+      fontSize: 30,
+      letterSpacing: displayTracking,
+    } as TextStyle,
+    title: {
+      fontFamily: f.display,
+      fontSize: 22,
+      letterSpacing: displayTracking,
+    } as TextStyle,
+    heading: {
+      fontFamily: f.display,
+      fontSize: 17,
+      letterSpacing: displayTracking,
+    } as TextStyle,
+    body: { fontFamily: f.body, fontSize: 15 } as TextStyle,
+    bodyStrong: { fontFamily: f.semibold, fontSize: 15 } as TextStyle,
+    label: { fontFamily: f.semibold, fontSize: 13 } as TextStyle,
+    caption: { fontFamily: f.medium, fontSize: 12.5 } as TextStyle,
+  };
+}
+
+/** @deprecated use getTypography(theme) */
+export const typography = {
+  brand: { fontSize: 30, fontWeight: "700" as const },
+  title: { fontSize: 22, fontWeight: "700" as const },
+  body: { fontSize: 15, fontWeight: "400" as const },
+  caption: { fontSize: 12.5, fontWeight: "600" as const },
+};
+
+/**
+ * Raised clay: bright top edge, dark bottom edge, soft drop shadow.
+ * React Native has no inset shadows, so the inner lighting is faked with hairline borders.
+ */
+export function clayRaised(
+  c: ThemeColors,
+  opts?: { radius?: number; lift?: number; background?: string }
+): ViewStyle {
+  const lift = opts?.lift ?? 8;
+  return {
+    backgroundColor: opts?.background ?? c.surface,
+    borderRadius: opts?.radius,
+    borderTopWidth: 1,
+    borderTopColor: c.clayHi,
+    borderBottomWidth: 1.5,
+    borderBottomColor: c.clayLo,
+    shadowColor: c.shadowColor,
+    shadowOpacity: c.shadowOpacity,
+    shadowRadius: lift * 1.7,
+    shadowOffset: { width: 0, height: Math.round(lift * 0.75) },
+    elevation: Math.round(lift * 0.8),
+  };
+}
+
+/** Pressed clay: the surface is carved inward, so the dark edge sits on top. */
+export function clayInset(
+  c: ThemeColors,
+  opts?: { radius?: number; background?: string }
+): ViewStyle {
+  return {
+    backgroundColor: opts?.background ?? c.input,
+    borderRadius: opts?.radius,
+    borderTopWidth: 1.5,
+    borderTopColor: c.clayLo,
+    borderBottomWidth: 1,
+    borderBottomColor: c.clayHi,
+  };
+}
+
+/** Raised clay on an accent-filled control (button, avatar, send key). */
+export function clayAccent(
+  c: ThemeColors,
+  opts?: { radius?: number; lift?: number; background?: string }
+): ViewStyle {
+  const lift = opts?.lift ?? 7;
+  return {
+    backgroundColor: opts?.background ?? c.accent,
+    borderRadius: opts?.radius,
+    borderTopWidth: 1,
+    borderTopColor: c.onAccentHi,
+    borderBottomWidth: 1.5,
+    borderBottomColor: c.onAccentLo,
+    shadowColor: c.shadowColor,
+    shadowOpacity: c.shadowOpacity,
+    shadowRadius: lift * 1.7,
+    shadowOffset: { width: 0, height: Math.round(lift * 0.75) },
+    elevation: Math.round(lift * 0.8),
+  };
+}
+
+/** @deprecated use clayRaised */
+export function clayShadow(_style: unknown, c: ThemeColors): ViewStyle {
+  return clayRaised(c);
 }

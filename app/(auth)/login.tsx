@@ -13,11 +13,11 @@ import { AuthCard, Button, Field, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { isSupabaseConfigured } from "../../src/supabase";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { spacing, typography } from "../../src/theme/tokens";
+import { spacing } from "../../src/theme/tokens";
 
 export default function LoginScreen() {
   const { login, loginWithGoogle } = useAuth();
-  const { colors } = useTheme();
+  const { colors, type } = useTheme();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -54,11 +54,11 @@ export default function LoginScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
           <AuthCard
             title="Welcome back"
-            subtitle="Your calm AI life manager"
+            subtitle="Pick up where your day left off."
             footer={
               <View style={{ alignItems: "center", gap: 6 }}>
-                <Text style={{ ...typography.body, color: colors.muted }}>New here?</Text>
-                <Link href="/(auth)/register" style={{ ...typography.body, fontWeight: "700", color: colors.accent }}>
+                <Text style={[type.body, { color: colors.muted }]}>New here?</Text>
+                <Link href="/(auth)/register" style={[type.label, { color: colors.ink }]}>
                   Create account
                 </Link>
               </View>
@@ -71,12 +71,10 @@ export default function LoginScreen() {
               loading={googleLoading}
             />
             <Text
-              style={{
-                ...typography.caption,
-                color: colors.muted,
-                textAlign: "center",
-                marginVertical: spacing.sm,
-              }}
+              style={[
+                type.caption,
+                { color: colors.muted, textAlign: "center", marginVertical: spacing.xs },
+              ]}
             >
               or continue with email
             </Text>

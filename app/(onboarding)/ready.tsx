@@ -1,15 +1,15 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Text } from "react-native";
+import { Alert, Text, View } from "react-native";
 
 import { Button, CompanionFace, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { spacing, typography } from "../../src/theme/tokens";
+import { spacing } from "../../src/theme/tokens";
 
 export default function ReadyScreen() {
   const { refreshUser } = useAuth();
-  const { colors } = useTheme();
+  const { colors, type } = useTheme();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -29,19 +29,25 @@ export default function ReadyScreen() {
 
   return (
     <Screen style={{ justifyContent: "center", alignItems: "center", gap: spacing.md }}>
-      <CompanionFace size={88} />
-      <Text style={{ ...typography.title, color: colors.ink }}>You’re ready</Text>
+      <CompanionFace size={72} />
+      <Text style={[type.display, { color: colors.ink }]}>You’re ready</Text>
       <Text
-        style={{
-          ...typography.body,
-          color: colors.muted,
-          textAlign: "center",
-          marginBottom: spacing.lg,
-        }}
+        style={[
+          type.body,
+          {
+            color: colors.muted,
+            textAlign: "center",
+            marginBottom: spacing.lg,
+            lineHeight: 22,
+            maxWidth: 300,
+          },
+        ]}
       >
-        Chat, Plan, tasks, and soft reminders — that’s the whole idea.
+        Chat, plan, tasks and quiet reminders — that is the whole idea.
       </Text>
-      <Button label="Enter LifeOS" onPress={() => void finish()} loading={loading} />
+      <View style={{ alignSelf: "stretch", paddingHorizontal: spacing.lg }}>
+        <Button label="Start using LifeOS" onPress={() => void finish()} loading={loading} />
+      </View>
     </Screen>
   );
 }

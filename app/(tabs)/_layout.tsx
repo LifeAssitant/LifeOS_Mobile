@@ -1,27 +1,50 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Text, View } from "react-native";
 
 import { useTheme } from "../../src/theme/ThemeContext";
+import { clayAccent } from "../../src/theme/tokens";
 
-function TabLabel({ label, focused, color, muted }: { label: string; focused: boolean; color: string; muted: string }) {
+function TabIcon({ glyph, focused }: { glyph: string; focused: boolean }) {
+  const { colors, radii } = useTheme();
+  if (!focused) {
+    return (
+      <View style={{ width: 38, height: 30, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ color: colors.muted, fontSize: 15 }}>{glyph}</Text>
+      </View>
+    );
+  }
   return (
-    <Text style={{ color: focused ? color : muted, fontSize: 12, fontWeight: "600" }}>{label}</Text>
+    <View
+      style={[
+        clayAccent(colors, { radius: radii.sm, lift: 4 }),
+        { width: 38, height: 30, alignItems: "center", justifyContent: "center" },
+      ]}
+    >
+      <Text style={{ color: colors.accentInk, fontSize: 15 }}>{glyph}</Text>
+    </View>
   );
 }
 
 export default function TabsLayout() {
-  const { colors } = useTheme();
+  const { colors, fonts } = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.card,
-          borderTopColor: colors.line,
-          height: 64,
-          paddingBottom: 8,
+          backgroundColor: colors.surface,
+          borderTopWidth: 1,
+          borderTopColor: colors.clayHi,
+          height: 72,
+          paddingBottom: 10,
           paddingTop: 8,
+          shadowColor: colors.shadowColor,
+          shadowOpacity: colors.shadowOpacity,
+          shadowRadius: 16,
+          shadowOffset: { width: 0, height: -6 },
+          elevation: 12,
         },
+        tabBarLabelStyle: { fontFamily: fonts.medium, fontSize: 11.5 },
         tabBarActiveTintColor: colors.ink,
         tabBarInactiveTintColor: colors.muted,
       }}
@@ -29,37 +52,29 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
-          tabBarIcon: ({ focused }) => (
-            <TabLabel label="◎" focused={focused} color={colors.ink} muted={colors.muted} />
-          ),
+          title: "Today",
+          tabBarIcon: ({ focused }) => <TabIcon glyph="◎" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
           title: "Plan",
-          tabBarIcon: ({ focused }) => (
-            <TabLabel label="▦" focused={focused} color={colors.ink} muted={colors.muted} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon glyph="▦" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="tasks"
         options={{
           title: "Tasks",
-          tabBarIcon: ({ focused }) => (
-            <TabLabel label="✓" focused={focused} color={colors.ink} muted={colors.muted} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon glyph="✓" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ focused }) => (
-            <TabLabel label="◍" focused={focused} color={colors.ink} muted={colors.muted} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon glyph="◍" focused={focused} />,
         }}
       />
     </Tabs>

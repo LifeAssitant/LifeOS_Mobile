@@ -6,11 +6,11 @@ import { AuthCard, Button, Field, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { isSupabaseConfigured } from "../../src/supabase";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { spacing, typography } from "../../src/theme/tokens";
+import { spacing } from "../../src/theme/tokens";
 
 export default function RegisterScreen() {
   const { register, loginWithGoogle } = useAuth();
-  const { colors } = useTheme();
+  const { colors, type } = useTheme();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -56,11 +56,11 @@ export default function RegisterScreen() {
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
           <AuthCard
             title="Create your space"
-            subtitle="Plan gently. Stay clear."
+            subtitle="Two minutes to set up, then just talk to it."
             footer={
               <View style={{ alignItems: "center", gap: 6 }}>
-                <Text style={{ ...typography.body, color: colors.muted }}>Already have an account?</Text>
-                <Link href="/(auth)/login" style={{ ...typography.body, fontWeight: "700", color: colors.accent }}>
+                <Text style={[type.body, { color: colors.muted }]}>Already have an account?</Text>
+                <Link href="/(auth)/login" style={[type.label, { color: colors.ink }]}>
                   Sign in
                 </Link>
               </View>
@@ -73,12 +73,10 @@ export default function RegisterScreen() {
               loading={googleLoading}
             />
             <Text
-              style={{
-                ...typography.caption,
-                color: colors.muted,
-                textAlign: "center",
-                marginVertical: spacing.sm,
-              }}
+              style={[
+                type.caption,
+                { color: colors.muted, textAlign: "center", marginVertical: spacing.xs },
+              ]}
             >
               or continue with email
             </Text>

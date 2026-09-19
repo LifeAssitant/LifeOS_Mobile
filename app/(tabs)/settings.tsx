@@ -1,17 +1,16 @@
-import { useEffect, useState } from "react";
-import { Alert, Linking, ScrollView, Text, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
-import { useCallback } from "react";
 
 import { api } from "../../src/api/client";
 import { Button, Field, Panel, Screen, ThemeToggle } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { spacing, typography } from "../../src/theme/tokens";
+import { clayInset, clayRaised, spacing } from "../../src/theme/tokens";
 
 export default function SettingsScreen() {
   const { user, logout, refreshUser } = useAuth();
-  const { colors } = useTheme();
+  const { colors, radii, type } = useTheme();
   const [mode, setMode] = useState<"hosted" | "byok">(user?.ai_mode ?? "hosted");
   const [key, setKey] = useState("");
   const [remindBefore, setRemindBefore] = useState(String(user?.remind_before_minutes ?? 15));
@@ -28,7 +27,8 @@ export default function SettingsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void api.googleCalendarStatus()
+      void api
+        .googleCalendarStatus()
         .then((s) => setCalendarConnected(s.connected))
         .catch(() => null);
     }, [])
@@ -121,38 +121,42 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={{ ...typography.title, color: colors.ink, marginBottom: 4 }}>Settings</Text>
-        <Text style={{ ...typography.caption, color: colors.muted, marginBottom: spacing.lg }}>
-          Appearance, calendar, and AI.
-        </Text>
-
-        <Text style={{ ...typography.caption, color: colors.muted, marginBottom: 8, textTransform: "uppercase" }}>
-          Appearance
-        </Text>
-        <View style={{ marginBottom: spacing.lg }}>
-          <ThemeToggle />
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.md }}>
+        <View>
+          <Text style={[type.title, { color: colors.ink }]}>Settings</Text>
+          <Text style={[type.caption, { color: colors.muted, marginTop: 2 }]}>
+            Theme, calendar, reminders and AI
+          </Text>
         </View>
 
-        <Panel style={{ marginBottom: spacing.md }}>
-          <Text style={{ ...typography.body, fontWeight: "700", color: colors.ink }}>{user?.email}</Text>
-          <Text style={{ ...typography.caption, color: colors.muted, marginTop: 4 }}>
-            Credits: {user?.credit_balance ?? 0} · BYOK: {user?.has_byok_key ? "saved" : "not set"}
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 10 }]}>Theme</Text>
+          <ThemeToggle />
+        </Panel>
+
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink }]}>{user?.email}</Text>
+          <Text style={[type.caption, { color: colors.muted, marginTop: 4 }]}>
+            {user?.credit_balance ?? 0} credits · Gemini key{" "}
+            {user?.has_byok_key ? "saved" : "not set"}
           </Text>
         </Panel>
 
-        <Panel soft="accent" style={{ marginBottom: spacing.md }}>
-          <Text style={{ ...typography.title, fontSize: 17, color: colors.ink, marginBottom: 4 }}>
-            Google Calendar
-          </Text>
-          <Text style={{ ...typography.caption, color: colors.muted, marginBottom: 12, lineHeight: 18 }}>
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 4 }]}>Google Calendar</Text>
+          <Text style={[type.caption, { color: colors.muted, marginBottom: 12, lineHeight: 18 }]}>
             {calendarConnected
-              ? "Your Google events appear quietly on Plan."
-              : "Connect once — LifeOS reads your primary calendar (no edits)."}
+              ? "Your Google events show up on Plan. LifeOS never edits them."
+              : "Connect once — LifeOS reads your primary calendar and makes no changes."}
           </Text>
           {calendarConnected ? (
             <View style={{ gap: 8 }}>
-              <Button label="Sync now" variant="ghost" onPress={() => void syncCalendar()} loading={calendarBusy} />
+              <Button
+                label="Sync now"
+                variant="ghost"
+                onPress={() => void syncCalendar()}
+                loading={calendarBusy}
+              />
               <Button
                 label="Disconnect"
                 variant="ghost"
@@ -168,47 +172,74 @@ export default function SettingsScreen() {
             />
           )}
           {msg ? (
-            <Text style={{ ...typography.caption, color: colors.muted, marginTop: 10 }}>{msg}</Text>
+            <Text style={[type.caption, { color: colors.muted, marginTop: 10 }]}>{msg}</Text>
           ) : null}
         </Panel>
 
-        <Text style={{ ...typography.body, fontWeight: "700", color: colors.ink, marginBottom: spacing.sm }}>
-          AI mode
-        </Text>
-        <View style={{ gap: 8, marginBottom: spacing.md }}>
-          <Button
-            label="LifeOS API"
-            variant={mode === "hosted" ? "primary" : "ghost"}
-            onPress={() => setMode("hosted")}
-          />
-          <Button
-            label="My Gemini key"
-            variant={mode === "byok" ? "primary" : "ghost"}
-            onPress={() => setMode("byok")}
-          />
-        </View>
-        {mode === "byok" ? (
-          <Field
-            label="Gemini API key"
-            value={key}
-            onChangeText={setKey}
-            autoCapitalize="none"
-            placeholder={user?.has_byok_key ? "•••••••• (leave blank to keep)" : "AIza…"}
-          />
-        ) : (
-          <View style={{ marginBottom: spacing.md }}>
-            <Button label="Buy credits" variant="ghost" onPress={() => void buyCredits()} />
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 4 }]}>AI</Text>
+          <Text style={[type.caption, { color: colors.muted, marginBottom: 12, lineHeight: 18 }]}>
+            Use LifeOS credits, or bring your own Gemini key and skip them entirely.
+          </Text>
+
+          <View
+            style={[
+              clayInset(colors, { radius: radii.md }),
+              { flexDirection: "row", gap: 4, padding: 4, marginBottom: 12 },
+            ]}
+          >
+            {(
+              [
+                { key: "hosted", label: "LifeOS credits" },
+                { key: "byok", label: "My Gemini key" },
+              ] as const
+            ).map((option) => {
+              const active = mode === option.key;
+              return (
+                <Pressable
+                  key={option.key}
+                  onPress={() => setMode(option.key)}
+                  style={[
+                    active
+                      ? clayRaised(colors, { radius: radii.sm, lift: 4 })
+                      : { borderRadius: radii.sm },
+                    { flex: 1, paddingVertical: 9, alignItems: "center" },
+                  ]}
+                >
+                  <Text
+                    style={[type.caption, { color: active ? colors.ink : colors.muted }]}
+                  >
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
-        )}
 
-        <Field
-          label="Remind me minutes before"
-          value={remindBefore}
-          onChangeText={setRemindBefore}
-          keyboardType="number-pad"
-        />
+          {mode === "byok" ? (
+            <Field
+              label="Gemini API key"
+              value={key}
+              onChangeText={setKey}
+              autoCapitalize="none"
+              placeholder={user?.has_byok_key ? "•••••••• (leave blank to keep)" : "AIza…"}
+            />
+          ) : (
+            <Button label="Buy credits" variant="ghost" onPress={() => void buyCredits()} />
+          )}
+        </Panel>
 
-        <View style={{ marginBottom: spacing.md }}>
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 4 }]}>Reminders</Text>
+          <Text style={[type.caption, { color: colors.muted, marginBottom: 12, lineHeight: 18 }]}>
+            How early should a nudge arrive before something starts?
+          </Text>
+          <Field
+            label="Remind me before (minutes)"
+            value={remindBefore}
+            onChangeText={setRemindBefore}
+            keyboardType="number-pad"
+          />
           <Button
             label={user?.quiet_hours_enabled ? "Quiet hours: on" : "Quiet hours: off"}
             variant="ghost"
@@ -217,10 +248,9 @@ export default function SettingsScreen() {
               await refreshUser();
             }}
           />
-        </View>
+        </Panel>
 
-        <Button label="Save" onPress={() => void saveAi()} loading={saving} />
-        <View style={{ height: spacing.md }} />
+        <Button label="Save changes" onPress={() => void saveAi()} loading={saving} />
         <Button label="Sign out" variant="danger" onPress={() => void logout()} />
         <View style={{ height: spacing.xl }} />
       </ScrollView>

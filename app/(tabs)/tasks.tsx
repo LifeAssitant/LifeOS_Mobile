@@ -6,10 +6,10 @@ import { api, Task } from "../../src/api/client";
 import { Button, EmptyState, Field, Screen } from "../../src/components/ui";
 import { scheduleLocalReminder } from "../../src/notifications";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { clayShadow, radii, spacing, typography } from "../../src/theme/tokens";
+import { clayRaised, spacing } from "../../src/theme/tokens";
 
 export default function TasksScreen() {
-  const { colors, style: themeStyle } = useTheme();
+  const { colors, radii, type } = useTheme();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
@@ -56,27 +56,34 @@ export default function TasksScreen() {
 
   return (
     <Screen>
-      <Text style={{ ...typography.title, color: colors.ink, marginBottom: spacing.md }}>Tasks</Text>
-      <Field label="Quick add" placeholder="Something small…" value={title} onChangeText={setTitle} />
+      <Text style={[type.title, { color: colors.ink, marginBottom: spacing.md }]}>Tasks</Text>
+
+      <Field
+        label="Quick add"
+        placeholder="Something small…"
+        value={title}
+        onChangeText={setTitle}
+        onSubmitEditing={() => void add()}
+      />
       <Button label="Add task" onPress={() => void add()} loading={saving} />
+
       <FlatList
         style={{ marginTop: spacing.lg }}
+        contentContainerStyle={{ gap: 8, paddingBottom: spacing.xl }}
         data={tasks}
         keyExtractor={(t) => t.id}
-        ListEmptyComponent={<EmptyState title="All clear" body="Enjoy the quiet — or add one above." />}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <EmptyState title="All clear" body="Enjoy the quiet — or add one above." />
+        }
         renderItem={({ item }) => (
           <Pressable
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: spacing.sm,
-              padding: spacing.md,
-              backgroundColor: colors.card,
-              borderRadius: radii.md,
-              marginBottom: spacing.sm,
-              ...clayShadow(themeStyle, colors),
-            }}
             onPress={() => void complete(item.id)}
+            style={({ pressed }) => [
+              clayRaised(colors, { radius: radii.md, lift: 6, background: colors.surface2 }),
+              { flexDirection: "row", alignItems: "center", gap: 12, padding: 14 },
+              pressed ? { transform: [{ scale: 0.99 }] } : null,
+            ]}
           >
             <View
               style={{
@@ -84,16 +91,16 @@ export default function TasksScreen() {
                 height: 22,
                 borderRadius: 11,
                 borderWidth: 2,
-                borderColor: colors.warm,
+                borderColor: colors.accent,
               }}
             />
             <View style={{ flex: 1 }}>
-              <Text style={{ ...typography.body, fontWeight: "600", color: colors.ink }}>{item.title}</Text>
-              <Text style={{ ...typography.caption, color: colors.muted }}>
+              <Text style={[type.label, { color: colors.ink }]}>{item.title}</Text>
+              <Text style={[type.caption, { color: colors.muted, marginTop: 2, fontSize: 11.5 }]}>
                 {item.due_at ? new Date(item.due_at).toLocaleString() : "No due time"}
               </Text>
             </View>
-            <Text style={{ ...typography.caption, color: colors.accent, fontWeight: "700" }}>Done</Text>
+            <Text style={[type.caption, { color: colors.inkSoft }]}>Done</Text>
           </Pressable>
         )}
       />

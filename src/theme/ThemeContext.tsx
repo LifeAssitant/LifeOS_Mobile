@@ -9,78 +9,73 @@ import React, {
 } from "react";
 
 import {
-  ColorScheme,
-  THEME_SCHEME_KEY,
-  THEME_STYLE_KEY,
+  LEGACY_STYLE_KEY,
+  THEME_KEY,
   ThemeColors,
-  ThemeStyle,
+  ThemeName,
+  getFonts,
   getPalette,
+  getRadii,
+  getTypography,
+  normalizeTheme,
 } from "./tokens";
 
 type ThemeContextValue = {
-  style: ThemeStyle;
-  scheme: ColorScheme;
+  theme: ThemeName;
   colors: ThemeColors;
-  setStyle: (style: ThemeStyle) => void;
-  setScheme: (scheme: ColorScheme) => void;
+  radii: ReturnType<typeof getRadii>;
+  fonts: ReturnType<typeof getFonts>;
+  type: ReturnType<typeof getTypography>;
+  setTheme: (theme: ThemeName) => void;
+  toggleTheme: () => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [style, setStyleState] = useState<ThemeStyle>("clay");
-  const [scheme, setSchemeState] = useState<ColorScheme>("light");
-  const [ready, setReady] = useState(false);
+  const [theme, setThemeState] = useState<ThemeName>("playful");
 
   useEffect(() => {
     (async () => {
       try {
-        const [s, c] = await Promise.all([
-          AsyncStorage.getItem(THEME_STYLE_KEY),
-          AsyncStorage.getItem(THEME_SCHEME_KEY),
-        ]);
-        if (s === "clay" || s === "glass") setStyleState(s);
-        if (c === "light" || c === "dark") setSchemeState(c);
+        const stored = await AsyncStorage.getItem(THEME_KEY);
+        if (stored) {
+          setThemeState(normalizeTheme(stored));
+          return;
+        }
+        const legacy = await AsyncStorage.getItem(LEGACY_STYLE_KEY);
+        if (legacy) setThemeState(normalizeTheme(legacy));
       } catch {
-        /* ignore */
-      } finally {
-        setReady(true);
+        /* keep the default */
       }
     })();
   }, []);
 
-  const setStyle = useCallback((next: ThemeStyle) => {
-    setStyleState(next);
-    void AsyncStorage.setItem(THEME_STYLE_KEY, next);
+  const setTheme = useCallback((next: ThemeName) => {
+    setThemeState(next);
+    void AsyncStorage.setItem(THEME_KEY, next);
   }, []);
 
-  const setScheme = useCallback((next: ColorScheme) => {
-    setSchemeState(next);
-    void AsyncStorage.setItem(THEME_SCHEME_KEY, next);
+  const toggleTheme = useCallback(() => {
+    setThemeState((current) => {
+      const next = current === "playful" ? "professional" : "playful";
+      void AsyncStorage.setItem(THEME_KEY, next);
+      return next;
+    });
   }, []);
-
-  const colors = useMemo(() => getPalette(style, scheme), [style, scheme]);
 
   const value = useMemo(
-    () => ({ style, scheme, colors, setStyle, setScheme }),
-    [style, scheme, colors, setStyle, setScheme]
+    () => ({
+      theme,
+      colors: getPalette(theme),
+      radii: getRadii(theme),
+      fonts: getFonts(theme),
+      type: getTypography(theme),
+      setTheme,
+      toggleTheme,
+    }),
+    [theme, setTheme, toggleTheme]
   );
-
-  if (!ready) {
-    return (
-      <ThemeContext.Provider
-        value={{
-          style: "clay",
-          scheme: "light",
-          colors: getPalette("clay", "light"),
-          setStyle,
-          setScheme,
-        }}
-      >
-        {children}
-      </ThemeContext.Provider>
-    );
-  }
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }

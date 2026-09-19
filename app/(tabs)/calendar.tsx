@@ -3,9 +3,9 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import { api, EventItem, Task } from "../../src/api/client";
-import { Button, EmptyState, Panel, Screen } from "../../src/components/ui";
+import { EmptyState, Screen } from "../../src/components/ui";
 import { useTheme } from "../../src/theme/ThemeContext";
-import { spacing, typography } from "../../src/theme/tokens";
+import { clayAccent, clayInset, clayRaised, spacing } from "../../src/theme/tokens";
 
 function dayKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -24,7 +24,7 @@ type DayItem = {
 };
 
 export default function PlanScreen() {
-  const { colors } = useTheme();
+  const { colors, radii, type } = useTheme();
   const [cursor, setCursor] = useState(() => new Date());
   const [selected, setSelected] = useState(() => dayKey(new Date()));
   const [events, setEvents] = useState<EventItem[]>([]);
@@ -77,8 +77,7 @@ export default function PlanScreen() {
   const monthCells = useMemo(() => {
     const year = cursor.getFullYear();
     const month = cursor.getMonth();
-    const first = new Date(year, month, 1);
-    const startPad = first.getDay();
+    const startPad = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const cells: Array<{ key: string; day: number | null; inMonth: boolean }> = [];
     for (let i = 0; i < startPad; i++) cells.push({ key: `pad-${i}`, day: null, inMonth: false });
@@ -108,160 +107,187 @@ export default function PlanScreen() {
     await load();
   };
 
+  const StepButton = ({ label, onPress }: { label: string; onPress: () => void }) => (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        clayRaised(colors, { radius: radii.sm, lift: 4, background: colors.surface2 }),
+        { minWidth: 34, height: 32, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+        pressed ? { transform: [{ scale: 0.97 }] } : null,
+      ]}
+    >
+      <Text style={[type.caption, { color: colors.inkSoft }]}>{label}</Text>
+    </Pressable>
+  );
+
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: spacing.md }}>
-          <View>
-            <Text style={{ ...typography.title, color: colors.ink }}>
-              {cursor.toLocaleString(undefined, { month: "long", year: "numeric" })}
-            </Text>
-            <Text style={{ ...typography.caption, color: colors.muted, marginTop: 4 }}>Your plan</Text>
-          </View>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: spacing.md,
+          }}
+        >
+          <Text style={[type.title, { color: colors.ink }]}>
+            {cursor.toLocaleString(undefined, { month: "long", year: "numeric" })}
+          </Text>
           <View style={{ flexDirection: "row", gap: 6 }}>
-            <Button
+            <StepButton
               label="‹"
-              variant="ghost"
               onPress={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
             />
-            <Button
+            <StepButton
               label="Today"
-              variant="ghost"
               onPress={() => {
                 const now = new Date();
                 setCursor(new Date(now.getFullYear(), now.getMonth(), 1));
                 setSelected(dayKey(now));
               }}
             />
-            <Button
+            <StepButton
               label="›"
-              variant="ghost"
               onPress={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
             />
           </View>
         </View>
 
-        <Panel soft="sky" style={{ marginBottom: spacing.md }}>
-          <View style={{ flexDirection: "row", marginBottom: 8 }}>
-            {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-              <Text
-                key={`${d}-${i}`}
-                style={{
-                  flex: 1,
-                  textAlign: "center",
-                  ...typography.caption,
-                  color: colors.muted,
-                }}
-              >
-                {d}
-              </Text>
-            ))}
-          </View>
-          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {monthCells.map((cell) => {
-              if (!cell.inMonth || cell.day == null) {
-                return <View key={cell.key} style={{ width: "14.28%", height: 40 }} />;
-              }
-              const count = itemsByDay.get(cell.key)?.length || 0;
-              const isSelected = cell.key === selected;
-              const isToday = cell.key === dayKey(new Date());
-              return (
+        <View style={{ flexDirection: "row", marginBottom: 6 }}>
+          {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
+            <Text
+              key={`${d}-${i}`}
+              style={[type.caption, { flex: 1, textAlign: "center", color: colors.muted, fontSize: 11 }]}
+            >
+              {d}
+            </Text>
+          ))}
+        </View>
+
+        <View
+          style={[
+            clayInset(colors, { radius: radii.md }),
+            { flexDirection: "row", flexWrap: "wrap", padding: 8, marginBottom: spacing.md },
+          ]}
+        >
+          {monthCells.map((cell) => {
+            if (!cell.inMonth || cell.day == null) {
+              return <View key={cell.key} style={{ width: "14.28%", height: 44 }} />;
+            }
+            const count = itemsByDay.get(cell.key)?.length || 0;
+            const isSelected = cell.key === selected;
+            const isToday = cell.key === dayKey(new Date());
+            return (
+              <View key={cell.key} style={{ width: "14.28%", padding: 2 }}>
                 <Pressable
-                  key={cell.key}
                   onPress={() => setSelected(cell.key)}
-                  style={{
-                    width: "14.28%",
-                    height: 44,
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderRadius: 12,
-                    backgroundColor: isSelected
-                      ? colors.warmSoft
+                  style={({ pressed }) => [
+                    isSelected
+                      ? clayAccent(colors, { radius: radii.sm, lift: 5 })
                       : isToday
-                        ? colors.accentSoft
-                        : "transparent",
-                  }}
+                        ? clayRaised(colors, {
+                            radius: radii.sm,
+                            lift: 3,
+                            background: colors.surface2,
+                          })
+                        : { borderRadius: radii.sm },
+                    { height: 42, alignItems: "center", justifyContent: "center" },
+                    pressed ? { transform: [{ scale: 0.96 }] } : null,
+                  ]}
                 >
                   <Text
-                    style={{
-                      ...typography.body,
-                      fontWeight: isSelected || isToday ? "700" : "500",
-                      color: colors.ink,
-                      fontSize: 13,
-                    }}
+                    style={[
+                      type.body,
+                      {
+                        fontSize: 13,
+                        fontFamily: isSelected || isToday ? undefined : undefined,
+                        color: isSelected ? colors.accentInk : colors.inkSoft,
+                      },
+                    ]}
                   >
                     {cell.day}
                   </Text>
-                  <View style={{ flexDirection: "row", gap: 3, minHeight: 5, marginTop: 2 }}>
+                  <View style={{ flexDirection: "row", gap: 3, height: 5, marginTop: 2 }}>
                     {count > 0 ? (
-                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: colors.accent }} />
+                      <View
+                        style={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: 2,
+                          backgroundColor: isSelected ? colors.accentInk : colors.accent,
+                        }}
+                      />
                     ) : null}
                     {count > 1 ? (
-                      <View style={{ width: 4, height: 4, borderRadius: 2, backgroundColor: colors.warm }} />
+                      <View
+                        style={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: 2,
+                          backgroundColor: isSelected ? colors.accentInk : colors.muted,
+                        }}
+                      />
                     ) : null}
                   </View>
                 </Pressable>
-              );
-            })}
-          </View>
-        </Panel>
+              </View>
+            );
+          })}
+        </View>
 
-        <Text style={{ ...typography.title, fontSize: 17, color: colors.ink, marginBottom: spacing.sm }}>
+        <Text style={[type.label, { color: colors.ink, marginBottom: spacing.sm }]}>
           {selectedLabel}
         </Text>
 
         {selectedItems.length ? (
-          selectedItems.map((item) => (
-            <View
-              key={`${item.kind}-${item.id}`}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: 12,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.line,
-              }}
-            >
+          <View style={{ gap: 8 }}>
+            {selectedItems.map((item) => (
               <View
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: 4,
-                  backgroundColor:
-                    item.source === "google"
-                      ? colors.muted
-                      : item.kind === "event"
-                        ? colors.accent
-                        : colors.warm,
-                }}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={{ ...typography.body, fontWeight: "600", color: colors.ink }}>{item.title}</Text>
-                <Text style={{ ...typography.caption, color: colors.muted, marginTop: 2 }}>
-                  {item.source === "google" ? "Google" : item.kind} ·{" "}
-                  {new Date(item.when).toLocaleTimeString(undefined, {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </Text>
-              </View>
-              {item.kind === "task" ? (
-                <Pressable onPress={() => void api.completeTask(item.id).then(load)}>
-                  <Text style={{ color: colors.accent, fontWeight: "700", fontSize: 12 }}>Done</Text>
-                </Pressable>
-              ) : null}
-              {item.source === "google" ? null : (
-                <Pressable onPress={() => void removeItem(item)}>
-                  <Text style={{ color: colors.muted, fontWeight: "700", fontSize: 12, marginLeft: 8 }}>
-                    Remove
+                key={`${item.kind}-${item.id}`}
+                style={[
+                  clayRaised(colors, { radius: radii.md, lift: 6, background: colors.surface2 }),
+                  { flexDirection: "row", alignItems: "center", gap: 11, padding: 13 },
+                ]}
+              >
+                <View
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor:
+                      item.source === "google"
+                        ? colors.muted
+                        : item.kind === "event"
+                          ? colors.accent
+                          : colors.mint,
+                  }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={[type.label, { color: colors.ink }]}>{item.title}</Text>
+                  <Text style={[type.caption, { color: colors.muted, marginTop: 2, fontSize: 11.5 }]}>
+                    {item.source === "google" ? "Google" : item.kind} ·{" "}
+                    {new Date(item.when).toLocaleTimeString(undefined, {
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
                   </Text>
-                </Pressable>
-              )}
-            </View>
-          ))
+                </View>
+                {item.kind === "task" ? (
+                  <Pressable onPress={() => void api.completeTask(item.id).then(load)}>
+                    <Text style={[type.caption, { color: colors.inkSoft }]}>Done</Text>
+                  </Pressable>
+                ) : null}
+                {item.source === "google" ? null : (
+                  <Pressable onPress={() => void removeItem(item)} style={{ marginLeft: 6 }}>
+                    <Text style={[type.caption, { color: colors.muted }]}>Remove</Text>
+                  </Pressable>
+                )}
+              </View>
+            ))}
+          </View>
         ) : (
-          <EmptyState title="Nothing yet" body="Ask LifeOS on Home to add something." />
+          <EmptyState title="Nothing here yet" body="Ask LifeOS on Home to add something." />
         )}
         <View style={{ height: spacing.xl }} />
       </ScrollView>
