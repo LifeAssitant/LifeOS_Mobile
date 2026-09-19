@@ -2,6 +2,7 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert, Text, View } from "react-native";
 
+import { requestTour } from "../../src/components/Tour";
 import { Button, CompanionFace, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
@@ -18,6 +19,7 @@ export default function ReadyScreen() {
     try {
       const { api } = await import("../../src/api/client");
       await api.updateMe({ onboarding_completed: true });
+      await requestTour();
       await refreshUser();
       router.replace("/(tabs)/home");
     } catch (err) {

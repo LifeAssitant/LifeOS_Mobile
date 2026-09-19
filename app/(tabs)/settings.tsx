@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { api } from "../../src/api/client";
+import { useTour } from "../../src/components/Tour";
 import { Button, Field, Panel, Screen, ThemeToggle } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
@@ -11,6 +12,8 @@ import { clayInset, clayRaised, spacing } from "../../src/theme/tokens";
 export default function SettingsScreen() {
   const { user, logout, refreshUser } = useAuth();
   const { colors, radii, type } = useTheme();
+  const router = useRouter();
+  const { start: startTour } = useTour();
   const [mode, setMode] = useState<"hosted" | "byok">(user?.ai_mode ?? "hosted");
   const [key, setKey] = useState("");
   const [remindBefore, setRemindBefore] = useState(String(user?.remind_before_minutes ?? 15));
@@ -246,6 +249,21 @@ export default function SettingsScreen() {
             onPress={async () => {
               await api.updateMe({ quiet_hours_enabled: !user?.quiet_hours_enabled });
               await refreshUser();
+            }}
+          />
+        </Panel>
+
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 4 }]}>Walkthrough</Text>
+          <Text style={[type.caption, { color: colors.muted, marginBottom: 12, lineHeight: 18 }]}>
+            Replay the short tour of the app.
+          </Text>
+          <Button
+            label="Show me around again"
+            variant="ghost"
+            onPress={() => {
+              router.push("/(tabs)/home");
+              startTour();
             }}
           />
         </Panel>

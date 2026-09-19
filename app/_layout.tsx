@@ -11,6 +11,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
+import { TourProvider } from "../src/components/Tour";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 import { registerForPushNotifications } from "../src/notifications";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
@@ -72,9 +73,11 @@ function ThemedStack() {
   const { colors } = useTheme();
   return (
     <Guard>
-      <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
-      />
+      <TourProvider>
+        <Stack
+          screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}
+        />
+      </TourProvider>
     </Guard>
   );
 }

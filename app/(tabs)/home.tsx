@@ -13,6 +13,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 
 import { api, ChatMessage } from "../../src/api/client";
 import { Markdown } from "../../src/components/Markdown";
+import { useTourTarget } from "../../src/components/Tour";
 import { AccountButton, Chip, CompanionFace, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
@@ -65,6 +66,9 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const composerTarget = useTourTarget("composer");
+  const suggestionsTarget = useTourTarget("suggestions");
+  const accountTarget = useTourTarget("account");
 
   const load = useCallback(async () => {
     try {
@@ -172,12 +176,14 @@ export default function HomeScreen() {
                 })}
             </Text>
           </View>
-          <AccountButton
-            name={user?.display_name}
-            email={user?.email}
-            onSettings={() => router.push("/(tabs)/settings")}
-            onLogout={() => void logout()}
-          />
+          <View {...accountTarget}>
+            <AccountButton
+              name={user?.display_name}
+              email={user?.email}
+              onSettings={() => router.push("/(tabs)/settings")}
+              onLogout={() => void logout()}
+            />
+          </View>
         </View>
 
         <View
@@ -211,7 +217,7 @@ export default function HomeScreen() {
                   Describe it the way you would to a friend. LifeOS writes the tasks, books the time
                   and sets the reminders.
                 </Text>
-                <View style={{ gap: 10 }}>
+                <View style={{ gap: 10 }} {...suggestionsTarget}>
                   {SUGGESTIONS.map((s) => (
                     <Pressable
                       key={s.title}
@@ -309,6 +315,7 @@ export default function HomeScreen() {
           />
 
           <View
+            {...composerTarget}
             style={[
               clayInset(colors, { radius: 999 }),
               {
