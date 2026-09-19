@@ -8,6 +8,7 @@ import { Button, Field, Panel, Screen, ThemeToggle } from "../../src/components/
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
 import { clayInset, clayRaised, spacing } from "../../src/theme/tokens";
+import { getSpeakReplies, setSpeakReplies, stopSpeaking } from "../../src/voice";
 
 export default function SettingsScreen() {
   const { user, logout, refreshUser } = useAuth();
@@ -23,6 +24,11 @@ export default function SettingsScreen() {
   );
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [speakReplies, setSpeakRepliesOn] = useState(true);
+
+  useEffect(() => {
+    void getSpeakReplies().then(setSpeakRepliesOn);
+  }, []);
 
   useEffect(() => {
     setCalendarConnected(Boolean(user?.google_calendar_connected));
@@ -177,6 +183,48 @@ export default function SettingsScreen() {
           {msg ? (
             <Text style={[type.caption, { color: colors.muted, marginTop: 10 }]}>{msg}</Text>
           ) : null}
+        </Panel>
+
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 4 }]}>Voice</Text>
+          <Text style={[type.caption, { color: colors.muted, marginBottom: 12, lineHeight: 18 }]}>
+            Tap the mic to talk. After you do, LifeOS can read its reply out loud.
+          </Text>
+          <View
+            style={[
+              clayInset(colors, { radius: radii.md }),
+              { flexDirection: "row", gap: 4, padding: 4 },
+            ]}
+          >
+            {(
+              [
+                { key: true, label: "Speak replies" },
+                { key: false, label: "Text only" },
+              ] as const
+            ).map((option) => {
+              const active = speakReplies === option.key;
+              return (
+                <Pressable
+                  key={option.label}
+                  onPress={() => {
+                    setSpeakRepliesOn(option.key);
+                    void setSpeakReplies(option.key);
+                    if (!option.key) stopSpeaking();
+                  }}
+                  style={[
+                    active
+                      ? clayRaised(colors, { radius: radii.sm, lift: 4 })
+                      : { borderRadius: radii.sm },
+                    { flex: 1, paddingVertical: 9, alignItems: "center" },
+                  ]}
+                >
+                  <Text style={[type.caption, { color: active ? colors.ink : colors.muted }]}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </Panel>
 
         <Panel>

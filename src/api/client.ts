@@ -88,13 +88,21 @@ async function refreshAccess(): Promise<string | null> {
   return data.access_token;
 }
 
+function isFormDataBody(body: BodyInit | null | undefined): boolean {
+  if (!body || typeof body === "string") return false;
+  if (typeof FormData !== "undefined" && body instanceof FormData) return true;
+  return typeof body === "object" && "append" in body;
+}
+
 export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
   auth = true
 ): Promise<T> {
   const headers = new Headers(options.headers || {});
-  headers.set("Content-Type", "application/json");
+  if (!isFormDataBody(options.body) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   if (auth) {
     let token = await getAccessToken();
@@ -282,6 +290,11 @@ export const api = {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }),
     }),
+  chatTranscribe: (uri: string, name = "voice.m4a", type = "audio/mp4") => {
+    const form = new FormData();
+    form.append("file", { uri, name, type } as unknown as Blob);
+    return apiFetch<{ text: string }>("/chat/transcribe", { method: "POST", body: form });
+  },
   chatUndo: (message_id: string, action_index = 0) =>
     apiFetch<{ ok: boolean }>("/chat/undo", {
       method: "POST",

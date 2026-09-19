@@ -11,6 +11,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.lifeos.app",
       "infoPlist": {
+        "NSMicrophoneUsageDescription": "LifeOS listens when you tap the mic so you can talk instead of type.",
+        "NSSpeechRecognitionUsageDescription": "LifeOS shows your words as you speak so you can see them before sending.",
         "UIBackgroundModes": [
           "remote-notification"
         ]
@@ -23,6 +25,7 @@
       },
       "package": "com.lifeos.app",
       "permissions": [
+        "RECORD_AUDIO",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
@@ -46,6 +49,13 @@
       "expo-asset",
       "expo-font",
       "expo-web-browser",
+      [
+        "expo-speech-recognition",
+        {
+          "microphonePermission": "LifeOS listens when you tap the mic so you can talk instead of type.",
+          "speechRecognitionPermission": "LifeOS shows your words as you speak so you can see them before sending."
+        }
+      ],
       [
         "expo-splash-screen",
         {

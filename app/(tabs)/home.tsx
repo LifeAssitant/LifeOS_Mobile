@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -18,6 +18,7 @@ import { AccountButton, Chip, CompanionFace, Screen } from "../../src/components
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
 import { clayAccent, clayInset, clayRaised, spacing } from "../../src/theme/tokens";
+import { speakReply, stopSpeaking, useVoiceRecorder } from "../../src/voice";
 
 function greeting(date: Date) {
   const h = date.getHours();
@@ -65,10 +66,17 @@ export default function HomeScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
   const inputRef = useRef<TextInput>(null);
+  const sendingRef = useRef(false);
+  const voice = useVoiceRecorder();
   const composerTarget = useTourTarget("composer");
   const suggestionsTarget = useTourTarget("suggestions");
   const accountTarget = useTourTarget("account");
+
+  useEffect(() => {
+    if (voice.status === "listening") setDraft(voice.liveText);
+  }, [voice.liveText, voice.status]);
 
   const load = useCallback(async () => {
     try {
@@ -86,11 +94,14 @@ export default function HomeScreen() {
     }, [load])
   );
 
-  const send = async () => {
-    if (!draft.trim() || sending) return;
+  const sendText = async (raw: string, fromVoice = false) => {
+    const text = raw.trim();
+    if (!text || sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
-    const text = draft.trim();
     setDraft("");
+    stopSpeaking();
+    setSpeaking(false);
     const optimistic: ChatMessage = {
       id: `local-${Date.now()}`,
       role: "user",
@@ -102,12 +113,43 @@ export default function HomeScreen() {
       const reply = await api.chatSend(text);
       setMessages((prev) => [...prev.filter((m) => m.id !== optimistic.id), optimistic, reply]);
       await load();
+      if (fromVoice) {
+        const spoke = await speakReply(reply.content);
+        setSpeaking(spoke);
+        if (spoke) {
+          setTimeout(
+            () => setSpeaking(false),
+            Math.min(12000, Math.max(1800, reply.content.length * 45))
+          );
+        }
+      }
     } catch (err) {
       setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
       setDraft(text);
       Alert.alert("Chat error", err instanceof Error ? err.message : "Try again");
     } finally {
+      sendingRef.current = false;
       setSending(false);
+    }
+  };
+
+  const send = async () => {
+    await sendText(draft);
+  };
+
+  const submitVoice = async () => {
+    const fromBox = draft.trim();
+    try {
+      const fromEngine = await voice.finish();
+      const text = (fromBox || fromEngine).trim();
+      if (!text) {
+        Alert.alert("Nothing heard", "Tap the mic, speak, then tap it again to send.");
+        return;
+      }
+      setDraft(text);
+      await sendText(text, true);
+    } catch (err) {
+      Alert.alert("Voice", err instanceof Error ? err.message : "Try again");
     }
   };
 
@@ -281,6 +323,7 @@ export default function HomeScreen() {
                     {
                       maxWidth: "92%",
                       padding: 13,
+                      paddingRight: isUser ? 13 : 28,
                       alignSelf: isUser ? "flex-end" : "flex-start",
                       borderBottomRightRadius: isUser ? 8 : radii.lg,
                       borderBottomLeftRadius: isUser ? radii.lg : 8,
@@ -292,7 +335,25 @@ export default function HomeScreen() {
                       {item.content}
                     </Text>
                   ) : (
-                    <Markdown text={item.content} />
+                    <View>
+                      <Markdown text={item.content} />
+                      <Pressable
+                        onPress={() => {
+                          if (speaking) {
+                            stopSpeaking();
+                            setSpeaking(false);
+                            return;
+                          }
+                          void speakReply(item.content).then((spoke) => setSpeaking(spoke));
+                        }}
+                        accessibilityLabel={speaking ? "Stop speaking" : "Listen to this reply"}
+                        style={{ position: "absolute", top: -2, right: -2, padding: 6 }}
+                      >
+                        <Text style={{ color: speaking ? colors.accent : colors.muted, fontSize: 13 }}>
+                          ♪
+                        </Text>
+                      </Pressable>
+                    </View>
                   )}
                   {item.actions?.some((a) => !a.undone) ? (
                     <View
@@ -314,6 +375,31 @@ export default function HomeScreen() {
             }}
           />
 
+          {voice.status === "listening" ? (
+            <View
+              style={[
+                clayRaised(colors, {
+                  radius: radii.lg,
+                  lift: 6,
+                  background: colors.accentSoft,
+                }),
+                {
+                  maxWidth: "92%",
+                  padding: 13,
+                  alignSelf: "flex-end",
+                  marginHorizontal: spacing.sm,
+                  marginBottom: 8,
+                  borderBottomRightRadius: 8,
+                },
+              ]}
+            >
+              <Text style={[type.body, { color: colors.ink, lineHeight: 21 }]}>
+                {voice.liveText.trim() || draft.trim() || "Listening…"}
+                <Text style={{ color: colors.accent }}> |</Text>
+              </Text>
+            </View>
+          ) : null}
+
           <View
             {...composerTarget}
             style={[
@@ -333,17 +419,68 @@ export default function HomeScreen() {
             <TextInput
               ref={inputRef}
               style={{ flex: 1, color: colors.ink, fontSize: 15, paddingVertical: 6 }}
-              placeholder="Talk to LifeOS…"
+              placeholder={
+                voice.status === "listening"
+                  ? "Words appear as you speak…"
+                  : voice.status === "transcribing"
+                    ? "Hearing you…"
+                    : "Talk to LifeOS…"
+              }
               placeholderTextColor={colors.muted}
               value={draft}
               onChangeText={setDraft}
-              editable={!sending}
+              editable={!sending && voice.status !== "transcribing"}
               onSubmitEditing={() => void send()}
               returnKeyType="send"
             />
             <Pressable
+              onPress={() => {
+                if (speaking) {
+                  stopSpeaking();
+                  setSpeaking(false);
+                }
+                if (voice.status === "listening") {
+                  void submitVoice();
+                  return;
+                }
+                if (voice.status !== "idle") return;
+                void voice.begin().catch((err) => {
+                  Alert.alert(
+                    "Microphone",
+                    err instanceof Error ? err.message : "Allow the microphone to talk to LifeOS."
+                  );
+                });
+              }}
+              disabled={sending || voice.status === "transcribing"}
+              accessibilityLabel={voice.status === "listening" ? "Stop and send" : "Talk"}
+              style={({ pressed }) => [
+                clayRaised(colors, {
+                  radius: 999,
+                  lift: 5,
+                  background: voice.status === "listening" ? colors.peach : colors.surface,
+                }),
+                {
+                  width: 40,
+                  height: 40,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: sending || voice.status === "transcribing" ? 0.45 : 1,
+                },
+                pressed ? { transform: [{ scale: 0.95 }] } : null,
+              ]}
+            >
+              <View
+                style={{
+                  width: 8,
+                  height: 11,
+                  borderRadius: 4,
+                  backgroundColor: voice.status === "listening" ? "#fff" : colors.ink,
+                }}
+              />
+            </Pressable>
+            <Pressable
               onPress={() => void send()}
-              disabled={sending || !draft.trim()}
+              disabled={sending || !draft.trim() || voice.status !== "idle"}
               accessibilityLabel="Send message"
               style={({ pressed }) => [
                 clayAccent(colors, { radius: 999, lift: 6 }),
@@ -352,7 +489,7 @@ export default function HomeScreen() {
                   height: 40,
                   alignItems: "center",
                   justifyContent: "center",
-                  opacity: sending || !draft.trim() ? 0.45 : 1,
+                  opacity: sending || !draft.trim() || voice.status !== "idle" ? 0.45 : 1,
                 },
                 pressed ? { transform: [{ scale: 0.95 }] } : null,
               ]}
