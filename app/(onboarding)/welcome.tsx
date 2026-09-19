@@ -90,7 +90,7 @@ export default function OnboardingScreen() {
           <ThemeToggle />
         </View>
 
-        <Button label="Continue" onPress={() => router.push("/(onboarding)/ready")} />
+        <Button label="Continue" onPress={() => router.push("/(onboarding)/attune")} />
       </ScrollView>
     </Screen>
   );
