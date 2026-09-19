@@ -1,13 +1,15 @@
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, StyleSheet, Text } from "react-native";
+import { Alert, Text } from "react-native";
 
 import { Button, CompanionFace, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors, spacing, typography } from "../../src/theme/tokens";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { spacing, typography } from "../../src/theme/tokens";
 
 export default function ReadyScreen() {
   const { refreshUser } = useAuth();
+  const { colors } = useTheme();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -26,17 +28,20 @@ export default function ReadyScreen() {
   };
 
   return (
-    <Screen style={styles.center}>
+    <Screen style={{ justifyContent: "center", alignItems: "center", gap: spacing.md }}>
       <CompanionFace size={88} />
-      <Text style={styles.title}>You’re ready</Text>
-      <Text style={styles.body}>Chat, calendar, tasks, and soft reminders — that’s the whole idea.</Text>
-      <Button label="Enter LifeOS" onPress={finish} loading={loading} />
+      <Text style={{ ...typography.title, color: colors.ink }}>You’re ready</Text>
+      <Text
+        style={{
+          ...typography.body,
+          color: colors.muted,
+          textAlign: "center",
+          marginBottom: spacing.lg,
+        }}
+      >
+        Chat, Plan, tasks, and soft reminders — that’s the whole idea.
+      </Text>
+      <Button label="Enter LifeOS" onPress={() => void finish()} loading={loading} />
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  center: { justifyContent: "center", alignItems: "center", gap: spacing.md },
-  title: { ...typography.title, color: colors.ink },
-  body: { ...typography.body, color: colors.muted, textAlign: "center", marginBottom: spacing.lg },
-});

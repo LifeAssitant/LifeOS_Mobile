@@ -1,3 +1,4 @@
+import * as Linking from "expo-linking";
 import React, {
   createContext,
   useCallback,
@@ -14,6 +15,7 @@ import {
   saveTokens,
   User,
 } from "../api/client";
+import { isSupabaseConfigured, sessionFromDeepLink, startGoogleOAuth } from "../supabase";
 
 type AuthState = {
   user: User | null;
@@ -21,6 +23,7 @@ type AuthState = {
   offlineHint: string | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name?: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setOfflineHint: (msg: string | null) => void;
@@ -47,6 +50,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const finishGoogleSession = useCallback(
+    async (accessToken: string) => {
+      const tokens = await api.loginWithGoogle(accessToken);
+      await saveTokens(tokens);
+      await refreshUser();
+    },
+    [refreshUser]
+  );
+
   useEffect(() => {
     (async () => {
       try {
@@ -61,11 +73,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, [refreshUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const tokens = await api.login(email.trim(), password);
-    await saveTokens(tokens);
-    await refreshUser();
-  }, [refreshUser]);
+  useEffect(() => {
+    const handleUrl = async (url: string) => {
+      try {
+        if (url.includes("calendar-connected")) {
+          // Settings screen listens via focus refresh; broadcast for sync.
+          return;
+        }
+        if (!url.includes("auth")) return;
+        if (!isSupabaseConfigured()) return;
+        const session = await sessionFromDeepLink(url);
+        if (session?.access_token) {
+          await finishGoogleSession(session.access_token);
+        }
+      } catch (err) {
+        setOfflineHint(err instanceof Error ? err.message : "Google sign-in failed");
+      }
+    };
+
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      void handleUrl(url);
+    });
+    void Linking.getInitialURL().then((url) => {
+      if (url) void handleUrl(url);
+    });
+    return () => sub.remove();
+  }, [finishGoogleSession]);
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const tokens = await api.login(email.trim(), password);
+      await saveTokens(tokens);
+      await refreshUser();
+    },
+    [refreshUser]
+  );
 
   const register = useCallback(
     async (email: string, password: string, name?: string) => {
@@ -75,6 +117,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
     [refreshUser]
   );
+
+  const loginWithGoogle = useCallback(async () => {
+    if (!isSupabaseConfigured()) {
+      throw new Error("Add supabaseUrl and supabaseAnonKey to app.json expo.extra");
+    }
+    const session = await startGoogleOAuth();
+    if (!session?.access_token) {
+      throw new Error("Google sign-in was cancelled");
+    }
+    await finishGoogleSession(session.access_token);
+  }, [finishGoogleSession]);
 
   const logout = useCallback(async () => {
     await clearTokens();
@@ -88,11 +141,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       offlineHint,
       login,
       register,
+      loginWithGoogle,
       logout,
       refreshUser,
       setOfflineHint,
     }),
-    [user, loading, offlineHint, login, register, logout, refreshUser]
+    [user, loading, offlineHint, login, register, loginWithGoogle, logout, refreshUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

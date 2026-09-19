@@ -5,10 +5,11 @@ import { ActivityIndicator, View } from "react-native";
 
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
 import { registerForPushNotifications } from "../src/notifications";
-import { colors } from "../src/theme/tokens";
+import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const { colors, scheme } = useTheme();
   const segments = useSegments();
   const router = useRouter();
 
@@ -39,21 +40,34 @@ function Guard({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.peach} />
+        <ActivityIndicator color={colors.warm} />
       </View>
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <StatusBar style={scheme === "dark" ? "light" : "dark"} />
+      {children}
+    </>
+  );
+}
+
+function ThemedStack() {
+  const { colors } = useTheme();
+  return (
+    <Guard>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+    </Guard>
+  );
 }
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <StatusBar style="dark" />
-      <Guard>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
-      </Guard>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ThemedStack />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

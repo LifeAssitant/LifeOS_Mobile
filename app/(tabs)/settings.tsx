@@ -1,17 +1,56 @@
-import { useState } from "react";
-import { Alert, Linking, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { Alert, Linking, ScrollView, Text, View } from "react-native";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 
 import { api } from "../../src/api/client";
-import { Button, Field, Screen } from "../../src/components/ui";
+import { Button, Field, Panel, Screen, ThemeToggle } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
-import { colors, radii, spacing, typography } from "../../src/theme/tokens";
+import { useTheme } from "../../src/theme/ThemeContext";
+import { spacing, typography } from "../../src/theme/tokens";
 
 export default function SettingsScreen() {
   const { user, logout, refreshUser } = useAuth();
+  const { colors } = useTheme();
   const [mode, setMode] = useState<"hosted" | "byok">(user?.ai_mode ?? "hosted");
   const [key, setKey] = useState("");
   const [remindBefore, setRemindBefore] = useState(String(user?.remind_before_minutes ?? 15));
   const [saving, setSaving] = useState(false);
+  const [calendarConnected, setCalendarConnected] = useState(
+    Boolean(user?.google_calendar_connected)
+  );
+  const [calendarBusy, setCalendarBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    setCalendarConnected(Boolean(user?.google_calendar_connected));
+  }, [user?.google_calendar_connected]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void api.googleCalendarStatus()
+        .then((s) => setCalendarConnected(s.connected))
+        .catch(() => null);
+    }, [])
+  );
+
+  useEffect(() => {
+    const sub = Linking.addEventListener("url", ({ url }) => {
+      if (!url.includes("calendar-connected")) return;
+      void (async () => {
+        setMsg("Google Calendar connected. Syncing…");
+        try {
+          await api.googleCalendarSync();
+          await refreshUser();
+          setCalendarConnected(true);
+          setMsg("Google Calendar synced.");
+        } catch (err) {
+          setMsg(err instanceof Error ? err.message : "Sync failed");
+        }
+      })();
+    });
+    return () => sub.remove();
+  }, [refreshUser]);
 
   const saveAi = async () => {
     setSaving(true);
@@ -40,26 +79,108 @@ export default function SettingsScreen() {
     }
   };
 
+  const connectCalendar = async () => {
+    setCalendarBusy(true);
+    setMsg("");
+    try {
+      const { url } = await api.googleCalendarConnect();
+      await Linking.openURL(url);
+      setMsg("Finish connecting in your browser…");
+    } catch (err) {
+      Alert.alert("Calendar", err instanceof Error ? err.message : "Could not connect");
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
+
+  const syncCalendar = async () => {
+    setCalendarBusy(true);
+    try {
+      const result = await api.googleCalendarSync();
+      setMsg(`Synced ${result.synced} events.`);
+    } catch (err) {
+      Alert.alert("Sync failed", err instanceof Error ? err.message : "Try again");
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
+
+  const disconnectCalendar = async () => {
+    setCalendarBusy(true);
+    try {
+      await api.googleCalendarDisconnect();
+      await refreshUser();
+      setCalendarConnected(false);
+      setMsg("Google Calendar disconnected.");
+    } catch (err) {
+      Alert.alert("Disconnect failed", err instanceof Error ? err.message : "Try again");
+    } finally {
+      setCalendarBusy(false);
+    }
+  };
+
   return (
     <Screen>
       <ScrollView showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>Settings</Text>
-        <View style={styles.card}>
-          <Text style={styles.label}>{user?.email}</Text>
-          <Text style={styles.meta}>Credits: {user?.credit_balance ?? 0}</Text>
-          <Text style={styles.meta}>
-            BYOK key: {user?.has_byok_key ? "saved" : "not set"}
-          </Text>
+        <Text style={{ ...typography.title, color: colors.ink, marginBottom: 4 }}>Settings</Text>
+        <Text style={{ ...typography.caption, color: colors.muted, marginBottom: spacing.lg }}>
+          Appearance, calendar, and AI.
+        </Text>
+
+        <Text style={{ ...typography.caption, color: colors.muted, marginBottom: 8, textTransform: "uppercase" }}>
+          Appearance
+        </Text>
+        <View style={{ marginBottom: spacing.lg }}>
+          <ThemeToggle />
         </View>
 
-        <Text style={styles.section}>AI mode</Text>
-        <View style={styles.row}>
+        <Panel style={{ marginBottom: spacing.md }}>
+          <Text style={{ ...typography.body, fontWeight: "700", color: colors.ink }}>{user?.email}</Text>
+          <Text style={{ ...typography.caption, color: colors.muted, marginTop: 4 }}>
+            Credits: {user?.credit_balance ?? 0} · BYOK: {user?.has_byok_key ? "saved" : "not set"}
+          </Text>
+        </Panel>
+
+        <Panel soft="accent" style={{ marginBottom: spacing.md }}>
+          <Text style={{ ...typography.title, fontSize: 17, color: colors.ink, marginBottom: 4 }}>
+            Google Calendar
+          </Text>
+          <Text style={{ ...typography.caption, color: colors.muted, marginBottom: 12, lineHeight: 18 }}>
+            {calendarConnected
+              ? "Your Google events appear quietly on Plan."
+              : "Connect once — LifeOS reads your primary calendar (no edits)."}
+          </Text>
+          {calendarConnected ? (
+            <View style={{ gap: 8 }}>
+              <Button label="Sync now" variant="ghost" onPress={() => void syncCalendar()} loading={calendarBusy} />
+              <Button
+                label="Disconnect"
+                variant="ghost"
+                onPress={() => void disconnectCalendar()}
+                loading={calendarBusy}
+              />
+            </View>
+          ) : (
+            <Button
+              label={calendarBusy ? "Opening…" : "Connect Google Calendar"}
+              onPress={() => void connectCalendar()}
+              loading={calendarBusy}
+            />
+          )}
+          {msg ? (
+            <Text style={{ ...typography.caption, color: colors.muted, marginTop: 10 }}>{msg}</Text>
+          ) : null}
+        </Panel>
+
+        <Text style={{ ...typography.body, fontWeight: "700", color: colors.ink, marginBottom: spacing.sm }}>
+          AI mode
+        </Text>
+        <View style={{ gap: 8, marginBottom: spacing.md }}>
           <Button
             label="LifeOS API"
             variant={mode === "hosted" ? "primary" : "ghost"}
             onPress={() => setMode("hosted")}
           />
-          <View style={{ height: 8 }} />
           <Button
             label="My Gemini key"
             variant={mode === "byok" ? "primary" : "ghost"}
@@ -75,7 +196,9 @@ export default function SettingsScreen() {
             placeholder={user?.has_byok_key ? "•••••••• (leave blank to keep)" : "AIza…"}
           />
         ) : (
-          <Button label="Buy credits" variant="ghost" onPress={buyCredits} />
+          <View style={{ marginBottom: spacing.md }}>
+            <Button label="Buy credits" variant="ghost" onPress={() => void buyCredits()} />
+          </View>
         )}
 
         <Field
@@ -85,7 +208,7 @@ export default function SettingsScreen() {
           keyboardType="number-pad"
         />
 
-        <View style={styles.row}>
+        <View style={{ marginBottom: spacing.md }}>
           <Button
             label={user?.quiet_hours_enabled ? "Quiet hours: on" : "Quiet hours: off"}
             variant="ghost"
@@ -96,26 +219,11 @@ export default function SettingsScreen() {
           />
         </View>
 
-        <Button label="Save" onPress={saveAi} loading={saving} />
+        <Button label="Save" onPress={() => void saveAi()} loading={saving} />
         <View style={{ height: spacing.md }} />
-        <Button label="Sign out" variant="danger" onPress={() => logout()} />
+        <Button label="Sign out" variant="danger" onPress={() => void logout()} />
+        <View style={{ height: spacing.xl }} />
       </ScrollView>
     </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  title: { ...typography.title, color: colors.ink, marginBottom: spacing.md },
-  card: {
-    backgroundColor: colors.card,
-    borderRadius: radii.md,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.line,
-    marginBottom: spacing.lg,
-  },
-  label: { ...typography.body, fontWeight: "700", color: colors.ink },
-  meta: { ...typography.caption, color: colors.muted, marginTop: 4 },
-  section: { ...typography.body, fontWeight: "700", color: colors.ink, marginBottom: spacing.sm },
-  row: { marginBottom: spacing.md },
-});

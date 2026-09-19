@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "orientation": "portrait",
     "scheme": "lifeos",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
     "ios": {
       "supportsTablet": true,
@@ -19,13 +19,25 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#F7F1EA"
+        "backgroundColor": "#ede8e2"
       },
       "package": "com.lifeos.app",
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "lifeos"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "plugins": [
@@ -33,12 +45,13 @@
       "expo-secure-store",
       "expo-asset",
       "expo-font",
+      "expo-web-browser",
       [
         "expo-splash-screen",
         {
           "image": "./assets/splash.png",
           "resizeMode": "contain",
-          "backgroundColor": "#F7F1EA"
+          "backgroundColor": "#ede8e2"
         }
       ]
     ],
@@ -46,7 +59,9 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "http://10.231.60.212:8000/api/v1"
+      "apiUrl": "http://10.231.60.212:8000/api/v1",
+      "supabaseUrl": "",
+      "supabaseAnonKey": ""
     }
   }
 }
