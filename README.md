@@ -48,6 +48,7 @@ EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 Then restart Expo. In Supabase Auth → URL configuration, allow redirect:
 
 - `lifeos://auth/callback`
+- Expo Go uses `exp://<LAN_HOST>:8081/--/auth/callback`. Add the URL for the host shown by `npx expo start --lan` (currently `exp://192.168.1.101:8081/--/auth/callback`). The LAN host can change between sessions.
 
 Google Calendar connect uses the same backend OAuth as desktop (`DESKTOP_OAUTH_SUCCESS_URL=lifeos://auth/calendar-connected`).
 
