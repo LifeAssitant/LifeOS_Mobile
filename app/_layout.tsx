@@ -27,6 +27,7 @@ function Guard({ children }: { children: React.ReactNode }) {
     if (loading) return;
     const inAuth = segments[0] === "(auth)";
     const inOnboarding = segments[0] === "(onboarding)";
+    const onPlans = segments[0] === "plans";
 
     if (!user && !inAuth) {
       router.replace("/(auth)/login");
@@ -40,13 +41,21 @@ function Guard({ children }: { children: React.ReactNode }) {
       user &&
       user.onboarding_completed &&
       !hasEnteredChat() &&
+      !onPlans &&
       segments[0] !== "garden" &&
-      segments[0] !== "garden-store"
+      segments[0] !== "garden-store" &&
+      segments[0] !== "billing"
     ) {
+      // Mid-onboarding completion: stay on the path ready.tsx chose (/plans),
+      // otherwise land on the garden intro.
+      if (inOnboarding) {
+        router.replace("/plans");
+        return;
+      }
       router.replace("/garden");
       return;
     }
-    if (user && user.onboarding_completed && (inAuth || inOnboarding)) {
+    if (user && user.onboarding_completed && (inAuth || inOnboarding) && !onPlans) {
       router.replace("/(tabs)/home");
     }
   }, [user, loading, segments, router]);

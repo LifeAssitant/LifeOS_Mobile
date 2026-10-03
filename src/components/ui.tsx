@@ -358,11 +358,13 @@ function ThemeSwatch({ theme }: { theme: ThemeName }) {
 export function AccountButton({
   name,
   email,
+  onBilling,
   onSettings,
   onLogout,
 }: {
   name?: string | null;
   email?: string | null;
+  onBilling?: () => void;
   onSettings: () => void;
   onLogout: () => void;
 }) {
@@ -406,6 +408,16 @@ export function AccountButton({
             <Text style={[type.caption, { color: colors.muted, paddingHorizontal: 6 }]}>Theme</Text>
             <ThemeToggle />
 
+            {onBilling ? (
+              <Button
+                label="Plans & billing"
+                variant="ghost"
+                onPress={() => {
+                  setOpen(false);
+                  onBilling();
+                }}
+              />
+            ) : null}
             <Button
               label="Settings"
               variant="ghost"

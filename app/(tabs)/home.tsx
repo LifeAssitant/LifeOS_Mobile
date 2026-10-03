@@ -226,6 +226,7 @@ export default function HomeScreen() {
             <AccountButton
               name={user?.display_name}
               email={user?.email}
+              onBilling={() => router.push("/billing")}
               onSettings={() => router.push("/(tabs)/settings")}
               onLogout={() => void logout()}
             />
