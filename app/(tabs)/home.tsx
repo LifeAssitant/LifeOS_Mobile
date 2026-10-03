@@ -15,6 +15,7 @@ import { api, ChatMessage } from "../../src/api/client";
 import { Markdown } from "../../src/components/Markdown";
 import { useTourTarget } from "../../src/components/Tour";
 import { AccountButton, Chip, CompanionFace, Screen } from "../../src/components/ui";
+import { Garden } from "../../src/components/Garden";
 import { useAuth } from "../../src/context/AuthContext";
 import { useTheme } from "../../src/theme/ThemeContext";
 import { clayAccent, clayInset, clayRaised, spacing } from "../../src/theme/tokens";
@@ -67,6 +68,7 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [speaking, setSpeaking] = useState(false);
+  const [gardenTick, setGardenTick] = useState(0);
   const inputRef = useRef<TextInput>(null);
   const sendingRef = useRef(false);
   const voice = useVoiceRecorder();
@@ -113,6 +115,7 @@ export default function HomeScreen() {
       const reply = await api.chatSend(text);
       setMessages((prev) => [...prev.filter((m) => m.id !== optimistic.id), optimistic, reply]);
       await load();
+      setGardenTick((n) => n + 1);
       if (fromVoice) {
         const spoke = await speakReply(reply.content);
         setSpeaking(spoke);
@@ -156,6 +159,7 @@ export default function HomeScreen() {
   const undo = async (messageId: string, index: number) => {
     try {
       await api.chatUndo(messageId, index);
+      setGardenTick((n) => n + 1);
       await load();
     } catch (err) {
       Alert.alert("Undo failed", err instanceof Error ? err.message : "Try again");
@@ -226,6 +230,10 @@ export default function HomeScreen() {
               onLogout={() => void logout()}
             />
           </View>
+        </View>
+
+        <View style={{ marginHorizontal: spacing.sm, marginBottom: spacing.sm }}>
+          <Garden compact refreshKey={gardenTick} />
         </View>
 
         <View

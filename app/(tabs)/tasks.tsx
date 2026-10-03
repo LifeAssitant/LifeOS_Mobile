@@ -3,6 +3,7 @@ import { Alert, FlatList, Pressable, Text, View } from "react-native";
 import { useFocusEffect } from "expo-router";
 
 import { api, Task } from "../../src/api/client";
+import { Garden } from "../../src/components/Garden";
 import { Button, EmptyState, Field, Screen } from "../../src/components/ui";
 import { scheduleLocalReminder } from "../../src/notifications";
 import { useTheme } from "../../src/theme/ThemeContext";
@@ -13,6 +14,7 @@ export default function TasksScreen() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
+  const [gardenTick, setGardenTick] = useState(0);
 
   const load = useCallback(async () => {
     const data = await api.tasks("open");
@@ -51,12 +53,16 @@ export default function TasksScreen() {
 
   const complete = async (id: string) => {
     await api.completeTask(id);
+    setGardenTick((n) => n + 1);
     await load();
   };
 
   return (
     <Screen>
       <Text style={[type.title, { color: colors.ink, marginBottom: spacing.md }]}>Tasks</Text>
+      <View style={{ marginBottom: spacing.md }}>
+        <Garden refreshKey={gardenTick} />
+      </View>
 
       <Field
         label="Quick add"
@@ -68,7 +74,7 @@ export default function TasksScreen() {
       <Button label="Add task" onPress={() => void add()} loading={saving} />
 
       <FlatList
-        style={{ marginTop: spacing.lg }}
+        style={{ flex: 1, marginTop: spacing.lg }}
         contentContainerStyle={{ gap: 8, paddingBottom: spacing.xl }}
         data={tasks}
         keyExtractor={(t) => t.id}

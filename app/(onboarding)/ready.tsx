@@ -21,7 +21,7 @@ export default function ReadyScreen() {
       await api.updateMe({ onboarding_completed: true });
       await requestTour();
       await refreshUser();
-      router.replace("/(tabs)/home");
+      router.replace("/garden");
     } catch (err) {
       Alert.alert("Something went wrong", err instanceof Error ? err.message : "Try again");
     } finally {

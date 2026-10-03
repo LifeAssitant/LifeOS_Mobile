@@ -13,6 +13,7 @@ import { ActivityIndicator, View } from "react-native";
 
 import { TourProvider } from "../src/components/Tour";
 import { AuthProvider, useAuth } from "../src/context/AuthContext";
+import { hasEnteredChat } from "../src/gardenGate";
 import { registerForPushNotifications } from "../src/notifications";
 import { ThemeProvider, useTheme } from "../src/theme/ThemeContext";
 
@@ -33,6 +34,16 @@ function Guard({ children }: { children: React.ReactNode }) {
     }
     if (user && !user.onboarding_completed && !inOnboarding) {
       router.replace("/(onboarding)/welcome");
+      return;
+    }
+    if (
+      user &&
+      user.onboarding_completed &&
+      !hasEnteredChat() &&
+      segments[0] !== "garden" &&
+      segments[0] !== "garden-store"
+    ) {
+      router.replace("/garden");
       return;
     }
     if (user && user.onboarding_completed && (inAuth || inOnboarding)) {

@@ -12,7 +12,6 @@
       "bundleIdentifier": "com.lifeos.app",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "LifeOS listens when you tap the mic so you can talk instead of type.",
-        "NSSpeechRecognitionUsageDescription": "LifeOS shows your words as you speak so you can see them before sending.",
         "UIBackgroundModes": [
           "remote-notification"
         ]
@@ -50,10 +49,9 @@
       "expo-font",
       "expo-web-browser",
       [
-        "expo-speech-recognition",
+        "expo-audio",
         {
-          "microphonePermission": "LifeOS listens when you tap the mic so you can talk instead of type.",
-          "speechRecognitionPermission": "LifeOS shows your words as you speak so you can see them before sending."
+          "microphonePermission": "LifeOS listens when you tap the mic so you can talk instead of type."
         }
       ],
       [

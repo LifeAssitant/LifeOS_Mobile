@@ -190,6 +190,15 @@ export type ProfileSurvey = {
   use_cases?: string[];
 };
 
+export type GardenStoreItem = {
+  sku: string;
+  name: string;
+  description: string;
+  category: string;
+  credit_cost: number;
+  owned: boolean;
+};
+
 export type Task = {
   id: string;
   title: string;
@@ -295,6 +304,12 @@ export const api = {
     form.append("file", { uri, name, type } as unknown as Blob);
     return apiFetch<{ text: string }>("/chat/transcribe", { method: "POST", body: form });
   },
+  chatTranscribeBase64: (audio_base64: string, mime_type = "audio/wav") => {
+    const form = new FormData();
+    form.append("audio_base64", audio_base64);
+    form.append("mime_type", mime_type);
+    return apiFetch<{ text: string }>("/chat/transcribe", { method: "POST", body: form });
+  },
   chatUndo: (message_id: string, action_index = 0) =>
     apiFetch<{ ok: boolean }>("/chat/undo", {
       method: "POST",
@@ -302,6 +317,20 @@ export const api = {
     }),
   checkout: () =>
     apiFetch<{ checkout_url: string }>("/billing/checkout", { method: "POST" }),
+  gardenCatalog: () =>
+    apiFetch<{
+      credit_balance: number;
+      items: GardenStoreItem[];
+      tasks_completed_lifetime: number;
+      task_credit_interval: number;
+      tasks_until_next_credit: number;
+    }>("/garden/catalog"),
+  gardenInventory: () => apiFetch<GardenStoreItem[]>("/garden/inventory"),
+  gardenPurchase: (sku: string) =>
+    apiFetch<{ credit_balance: number; owned_skus: string[]; item: GardenStoreItem }>(
+      "/garden/purchase",
+      { method: "POST", body: JSON.stringify({ sku }) }
+    ),
   googleCalendarStatus: () =>
     apiFetch<{ connected: boolean }>("/calendar/google/status"),
   googleCalendarConnect: () =>
