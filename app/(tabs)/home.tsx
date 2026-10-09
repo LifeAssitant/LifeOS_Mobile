@@ -28,6 +28,14 @@ function greeting(date: Date) {
   return "Good evening";
 }
 
+function replyIntent(message: ChatMessage): "changed" | "asking" | null {
+  if (message.role !== "assistant") return null;
+  const live = (message.actions || []).filter((a) => !a.undone && a.type !== "remember");
+  if (live.some((a) => a.changed_schedule !== false)) return "changed";
+  if (/\?/.test(message.content)) return "asking";
+  return null;
+}
+
 const SUGGESTIONS: Array<{
   tone: "mint" | "peach" | "sky" | "lilac";
   title: string;
@@ -65,6 +73,7 @@ export default function HomeScreen() {
   const { colors, radii, type, theme } = useTheme();
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [softGreeting, setSoftGreeting] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -85,6 +94,14 @@ export default function HomeScreen() {
       const history = await api.chatHistory();
       setMessages(history);
       setOfflineHint(null);
+      try {
+        const greetingPayload = await api.chatGreeting();
+        setSoftGreeting(
+          greetingPayload.show && greetingPayload.message ? greetingPayload.message : null
+        );
+      } catch {
+        setSoftGreeting(null);
+      }
     } catch {
       setOfflineHint("We’ll sync when you’re back.");
     }
@@ -102,6 +119,7 @@ export default function HomeScreen() {
     sendingRef.current = true;
     setSending(true);
     setDraft("");
+    setSoftGreeting(null);
     stopSpeaking();
     setSpeaking(false);
     const optimistic: ChatMessage = {
@@ -319,8 +337,35 @@ export default function HomeScreen() {
                 </View>
               </View>
             }
+            ListHeaderComponent={
+              softGreeting ? (
+                <View
+                  style={[
+                    clayRaised(colors, {
+                      radius: radii.lg,
+                      lift: 6,
+                      background: colors.surface2,
+                    }),
+                    {
+                      maxWidth: "92%",
+                      padding: 13,
+                      alignSelf: "flex-start",
+                      marginBottom: 10,
+                      borderBottomLeftRadius: 8,
+                    },
+                  ]}
+                >
+                  <Text style={[type.caption, { color: colors.sky, marginBottom: 6, fontWeight: "600" }]}>
+                    Checking in
+                  </Text>
+                  <Markdown text={softGreeting} />
+                </View>
+              ) : null
+            }
             renderItem={({ item }) => {
               const isUser = item.role === "user";
+              const intent = replyIntent(item);
+              const liveActions = (item.actions || []).filter((a) => !a.undone);
               return (
                 <View
                   style={[
@@ -345,6 +390,15 @@ export default function HomeScreen() {
                     </Text>
                   ) : (
                     <View>
+                      {intent === "changed" ? (
+                        <Text style={[type.caption, { color: colors.mint, marginBottom: 6, fontWeight: "600" }]}>
+                          Updated your plan
+                        </Text>
+                      ) : intent === "asking" ? (
+                        <Text style={[type.caption, { color: colors.sky, marginBottom: 6, fontWeight: "600" }]}>
+                          Checking with you
+                        </Text>
+                      ) : null}
                       <Markdown text={item.content} />
                       <Pressable
                         onPress={() => {
@@ -364,19 +418,23 @@ export default function HomeScreen() {
                       </Pressable>
                     </View>
                   )}
-                  {item.actions?.some((a) => !a.undone) ? (
+                  {liveActions.length ? (
                     <View
                       style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}
                     >
-                      {item.actions.map((action, idx) =>
-                        action.undone ? null : (
+                      {liveActions.map((action) => {
+                        const idx = (item.actions || []).indexOf(action);
+                        const canUndo = action.undoable !== false && action.type !== "remember";
+                        return (
                           <Chip
                             key={`${item.id}-${idx}`}
-                            label={`${action.summary} · Undo`}
-                            onPress={() => void undo(item.id, idx)}
+                            label={canUndo ? `${action.summary} · Undo` : action.summary}
+                            onPress={() => {
+                              if (canUndo) void undo(item.id, idx);
+                            }}
                           />
-                        )
-                      )}
+                        );
+                      })}
                     </View>
                   ) : null}
                 </View>

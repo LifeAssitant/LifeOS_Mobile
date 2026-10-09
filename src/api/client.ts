@@ -235,9 +235,18 @@ export type ChatMessage = {
     summary: string;
     entity_id?: string;
     undone?: boolean;
+    undoable?: boolean;
+    changed_schedule?: boolean;
   }> | null;
   linked_entity_ids?: string[] | null;
   created_at: string;
+};
+
+export type ChatGreeting = {
+  show: boolean;
+  kind?: string | null;
+  hours_since?: number | null;
+  message?: string | null;
 };
 
 export const api = {
@@ -291,6 +300,10 @@ export const api = {
   deleteEvent: (id: string) =>
     apiFetch<void>(`/events/${id}`, { method: "DELETE" }),
   chatHistory: () => apiFetch<ChatMessage[]>("/chat/messages"),
+  chatGreeting: () => {
+    const tz = encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone);
+    return apiFetch<ChatGreeting>(`/chat/greeting?timezone=${tz}`);
+  },
   chatSend: (message: string) =>
     apiFetch<ChatMessage>("/chat/send", {
       method: "POST",
