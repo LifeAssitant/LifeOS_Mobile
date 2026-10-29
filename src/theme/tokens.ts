@@ -146,7 +146,7 @@ export function normalizeTheme(raw: string | null): ThemeName {
   return "playful";
 }
 
-export const THEMES: Array<{ id: ThemeName; label: string; hint: string }> = [
+export const THEMES: { id: ThemeName; label: string; hint: string }[] = [
   { id: "playful", label: "Playful", hint: "Soft pastels, rounded, bright" },
   { id: "professional", label: "Professional", hint: "Graphite, monochrome, focused" },
 ];

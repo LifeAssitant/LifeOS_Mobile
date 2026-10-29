@@ -39,7 +39,7 @@ const USE_CASES = [
   "Appointments",
 ];
 
-const STAGES = 4;
+const STAGES = 3;
 
 function splitExtra(value: string) {
   return value
@@ -55,7 +55,6 @@ export default function AttuneScreen() {
   const [stage, setStage] = useState(0);
   const [roles, setRoles] = useState<string[]>([]);
   const [roleOther, setRoleOther] = useState("");
-  const [age, setAge] = useState("");
   const [busy, setBusy] = useState(0);
   const [uses, setUses] = useState<string[]>([]);
   const [useOther, setUseOther] = useState("");
@@ -74,7 +73,6 @@ export default function AttuneScreen() {
     try {
       await api.saveProfile({
         professions: chosenRoles.length ? chosenRoles : undefined,
-        age: Number(age) || undefined,
         busy_level: busy || undefined,
         use_cases: chosenUses.length ? chosenUses : undefined,
       });
@@ -91,10 +89,8 @@ export default function AttuneScreen() {
     stage === 0
       ? chosenRoles.length > 0
       : stage === 1
-        ? Boolean(Number(age))
-        : stage === 2
-          ? busy > 0
-          : true;
+        ? busy > 0
+        : true;
 
   const textField = [
     clayInset(colors, { radius: radii.md }) as TextStyle,
@@ -131,7 +127,7 @@ export default function AttuneScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[type.display, { color: colors.ink, fontSize: 24 }]}>Attune</Text>
             <Text style={[type.caption, { color: colors.muted, marginTop: 2 }]}>
-              Four quick things so LifeOS starts out shaped like your life.
+              Three quick things so LifeOS starts out shaped like your life.
             </Text>
           </View>
           <Text style={[type.caption, { color: colors.muted }]}>
@@ -180,44 +176,6 @@ export default function AttuneScreen() {
 
         {stage === 1 ? (
           <View style={{ marginTop: spacing.lg, gap: 12 }}>
-            <Text style={[type.title, { color: colors.ink, fontSize: 19 }]}>How old are you?</Text>
-            <Text style={[type.caption, { color: colors.muted, marginTop: -6 }]}>
-              It helps us read the rest of your answers.
-            </Text>
-            <View
-              style={[
-                clayInset(colors, { radius: radii.lg }),
-                {
-                  flexDirection: "row",
-                  alignItems: "baseline",
-                  justifyContent: "center",
-                  gap: 10,
-                  paddingVertical: spacing.lg,
-                },
-              ]}
-            >
-              <TextInput
-                value={age}
-                onChangeText={setAge}
-                keyboardType="number-pad"
-                placeholder="24"
-                placeholderTextColor={colors.line}
-                maxLength={3}
-                style={{
-                  minWidth: 110,
-                  textAlign: "center",
-                  color: colors.accent,
-                  fontFamily: type.display.fontFamily,
-                  fontSize: 52,
-                }}
-              />
-              <Text style={[type.label, { color: colors.muted }]}>years</Text>
-            </View>
-          </View>
-        ) : null}
-
-        {stage === 2 ? (
-          <View style={{ marginTop: spacing.lg, gap: 12 }}>
             <Text style={[type.title, { color: colors.ink, fontSize: 19 }]}>
               How packed is a normal week?
             </Text>
@@ -229,7 +187,7 @@ export default function AttuneScreen() {
           </View>
         ) : null}
 
-        {stage === 3 ? (
+        {stage === 2 ? (
           <View style={{ marginTop: spacing.lg, gap: 12 }}>
             <Text style={[type.title, { color: colors.ink, fontSize: 19 }]}>
               What will you lean on LifeOS for?
@@ -261,7 +219,7 @@ export default function AttuneScreen() {
           ) : null}
           <Pressable onPress={leave} hitSlop={8} style={{ alignSelf: "center", padding: 8 }}>
             <Text style={[type.label, { color: colors.muted, fontSize: 13 }]}>
-              I'll do this later
+              I&apos;ll do this later
             </Text>
           </Pressable>
         </View>

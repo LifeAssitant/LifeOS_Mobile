@@ -23,6 +23,28 @@ type DayItem = {
   source?: string;
 };
 
+function StepButton({
+  label,
+  onPress,
+}: {
+  label: string;
+  onPress: () => void;
+}) {
+  const { colors, radii, type } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        clayRaised(colors, { radius: radii.sm, lift: 4, background: colors.surface2 }),
+        { minWidth: 34, height: 32, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
+        pressed ? { transform: [{ scale: 0.97 }] } : null,
+      ]}
+    >
+      <Text style={[type.caption, { color: colors.inkSoft }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export default function PlanScreen() {
   const { colors, radii, type } = useTheme();
   const [cursor, setCursor] = useState(() => new Date());
@@ -79,7 +101,7 @@ export default function PlanScreen() {
     const month = cursor.getMonth();
     const startPad = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const cells: Array<{ key: string; day: number | null; inMonth: boolean }> = [];
+    const cells: { key: string; day: number | null; inMonth: boolean }[] = [];
     for (let i = 0; i < startPad; i++) cells.push({ key: `pad-${i}`, day: null, inMonth: false });
     for (let d = 1; d <= daysInMonth; d++) {
       cells.push({ key: dayKey(new Date(year, month, d)), day: d, inMonth: true });
@@ -106,19 +128,6 @@ export default function PlanScreen() {
     else await api.deleteTask(item.id);
     await load();
   };
-
-  const StepButton = ({ label, onPress }: { label: string; onPress: () => void }) => (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        clayRaised(colors, { radius: radii.sm, lift: 4, background: colors.surface2 }),
-        { minWidth: 34, height: 32, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
-        pressed ? { transform: [{ scale: 0.97 }] } : null,
-      ]}
-    >
-      <Text style={[type.caption, { color: colors.inkSoft }]}>{label}</Text>
-    </Pressable>
-  );
 
   return (
     <Screen>

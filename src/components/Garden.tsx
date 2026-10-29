@@ -311,7 +311,7 @@ function PieceView({
   reduceMotion: boolean;
   children: ReactNode;
 }) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const [scale] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     if (!pop || reduceMotion) return;
@@ -660,8 +660,8 @@ export function Garden({
   const [reduceMotion, setReduceMotion] = useState(false);
   const prevRef = useRef(0);
   const [popFrom, setPopFrom] = useState<number | null>(null);
-  const flutter = useRef(new Animated.Value(0)).current;
-  const flutterLate = useRef(new Animated.Value(0)).current;
+  const [flutter] = useState(() => new Animated.Value(0));
+  const [flutterLate] = useState(() => new Animated.Value(0));
 
   const load = useCallback(async () => {
     try {
@@ -675,12 +675,10 @@ export function Garden({
   useFocusEffect(
     useCallback(() => {
       void load();
-    }, [load])
+      // refreshKey invalidates garden data after task and chat changes.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [load, refreshKey])
   );
-
-  useEffect(() => {
-    void load();
-  }, [load, refreshKey]);
 
   useEffect(() => {
     const before = prevRef.current;

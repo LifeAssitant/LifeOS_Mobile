@@ -130,6 +130,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
 
   const start = useCallback(() => {
     setIndex(0);
+    setRect(null);
     setActive(true);
   }, []);
 
@@ -154,10 +155,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const finish = useCallback(() => {
     setActive(false);
     setIndex(0);
+    setRect(null);
     void AsyncStorage.removeItem(TOUR_FLAG).catch(() => undefined);
   }, []);
 
   const next = useCallback(() => {
+    setRect(null);
     setIndex((i) => {
       if (i >= STEPS.length - 1) {
         setActive(false);
@@ -169,20 +172,9 @@ export function TourProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!active || !step) return;
-    if (step.rect) {
-      setRect(step.rect(screen));
-      return;
-    }
-    if (!step.target) {
-      setRect(null);
-      return;
-    }
+    if (!active || !step?.target) return;
     const node = targets.current.get(step.target);
-    if (!node) {
-      setRect(null);
-      return;
-    }
+    if (!node) return;
     // Layout can still be settling right after the tab mounts.
     const t = setTimeout(() => {
       node.measureInWindow((x, y, width, height) => {
@@ -201,11 +193,12 @@ export function TourProvider({ children }: { children: ReactNode }) {
   const value = useMemo(() => ({ register, start }), [register, start]);
   const veil = theme === "professional" ? "rgba(0,0,0,0.62)" : "rgba(58,40,46,0.42)";
 
+  const highlightRect = step?.rect ? step.rect(screen) : rect;
   const cardTop = (() => {
-    if (!rect) return Math.max(SCREEN_EDGE + 20, screen.height / 2 - CARD_HEIGHT / 2 - 20);
-    const below = rect.y + rect.height + 14;
+    if (!highlightRect) return Math.max(SCREEN_EDGE + 20, screen.height / 2 - CARD_HEIGHT / 2 - 20);
+    const below = highlightRect.y + highlightRect.height + 14;
     if (below + CARD_HEIGHT < screen.height - SCREEN_EDGE) return below;
-    return Math.max(SCREEN_EDGE, rect.y - CARD_HEIGHT - 14);
+    return Math.max(SCREEN_EDGE, highlightRect.y - CARD_HEIGHT - 14);
   })();
 
   const isIntro = step?.id === "intro";
@@ -216,7 +209,7 @@ export function TourProvider({ children }: { children: ReactNode }) {
       {children}
       <Modal visible={active} transparent statusBarTranslucent animationType="fade">
         <View style={{ flex: 1 }}>
-          {rect ? (
+          {highlightRect ? (
             <>
               <View
                 style={{
@@ -224,14 +217,14 @@ export function TourProvider({ children }: { children: ReactNode }) {
                   top: 0,
                   left: 0,
                   right: 0,
-                  height: Math.max(0, rect.y),
+                  height: Math.max(0, highlightRect.y),
                   backgroundColor: veil,
                 }}
               />
               <View
                 style={{
                   position: "absolute",
-                  top: rect.y + rect.height,
+                  top: highlightRect.y + highlightRect.height,
                   left: 0,
                   right: 0,
                   bottom: 0,
@@ -241,20 +234,20 @@ export function TourProvider({ children }: { children: ReactNode }) {
               <View
                 style={{
                   position: "absolute",
-                  top: rect.y,
+                  top: highlightRect.y,
                   left: 0,
-                  width: Math.max(0, rect.x),
-                  height: rect.height,
+                  width: Math.max(0, highlightRect.x),
+                  height: highlightRect.height,
                   backgroundColor: veil,
                 }}
               />
               <View
                 style={{
                   position: "absolute",
-                  top: rect.y,
-                  left: rect.x + rect.width,
+                  top: highlightRect.y,
+                  left: highlightRect.x + highlightRect.width,
                   right: 0,
-                  height: rect.height,
+                  height: highlightRect.height,
                   backgroundColor: veil,
                 }}
               />
@@ -262,10 +255,10 @@ export function TourProvider({ children }: { children: ReactNode }) {
                 pointerEvents="none"
                 style={{
                   position: "absolute",
-                  top: rect.y,
-                  left: rect.x,
-                  width: rect.width,
-                  height: rect.height,
+                  top: highlightRect.y,
+                  left: highlightRect.x,
+                  width: highlightRect.width,
+                  height: highlightRect.height,
                   borderRadius: radii.lg,
                   borderWidth: 2,
                   borderColor: colors.accent,

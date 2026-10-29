@@ -9,16 +9,30 @@ if (fs.existsSync(desktopEnvPath)) {
 dotenv.config();
 
 const appJson = require("./app.json");
+const productionBuild =
+  process.env.NODE_ENV === "production" ||
+  ["preview", "production"].includes(process.env.EAS_BUILD_PROFILE);
+const apiUrl = process.env.EXPO_PUBLIC_API_URL?.trim() || "";
+
+if (productionBuild) {
+  let parsedUrl;
+  try {
+    parsedUrl = new URL(apiUrl);
+  } catch {
+    throw new Error("Set EXPO_PUBLIC_API_URL to the public LifeOS API URL for production builds.");
+  }
+  if (parsedUrl.protocol !== "https:" || !parsedUrl.hostname) {
+    throw new Error("Production EXPO_PUBLIC_API_URL must be an HTTPS URL.");
+  }
+}
 
 module.exports = {
   expo: {
     ...appJson.expo,
     extra: {
       ...appJson.expo.extra,
-      apiUrl:
-        process.env.EXPO_PUBLIC_API_URL ||
-        appJson.expo.extra?.apiUrl ||
-        "http://localhost:8000/api/v1",
+      apiUrl,
+      productionBuild,
       supabaseUrl:
         process.env.EXPO_PUBLIC_SUPABASE_URL ||
         process.env.VITE_SUPABASE_URL ||

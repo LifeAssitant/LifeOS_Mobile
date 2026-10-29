@@ -4,6 +4,10 @@ Expo (React Native) client for LifeOS — use **Expo Go** (SDK **57**) on your p
 
 Matches the desktop app: Clay/Glass × Light/Dark themes, Google sign-in, Google Calendar, chat, Plan month view, and settings.
 
+Email and Google sign-in require an 18+ self-declaration; LifeOS does not ask for
+date of birth. Paid credit purchases and subscriptions are disabled at launch.
+Confirm the age policy with qualified counsel before accepting public users.
+
 ## Setup
 
 ```bash
@@ -28,10 +32,12 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 npx expo start --lan
 ```
 
-The app auto-detects your PC’s LAN IP from the Expo host. Fallback URL is in `.env`:
+The app auto-detects your PC’s LAN IP from the Expo host during development. Set
+`EXPO_PUBLIC_API_URL` to the public HTTPS API URL in the EAS production environment
+before creating a release build; production builds fail if it is missing:
 
 ```env
-EXPO_PUBLIC_API_URL=http://YOUR_PC_LAN_IP:8000/api/v1
+EXPO_PUBLIC_API_URL=https://api.brainlesshuman.com/api/v1
 ```
 
 Copy `.env.example` → `.env` if needed. `app.config.js` loads these into the app.

@@ -1,6 +1,15 @@
 import { Link } from "expo-router";
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 
 import { AuthCard, Button, Field, Screen } from "../../src/components/ui";
 import { useAuth } from "../../src/context/AuthContext";
@@ -14,10 +23,15 @@ export default function RegisterScreen() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [adultConfirmed, setAdultConfirmed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
   const onSubmit = async () => {
+    if (!adultConfirmed) {
+      Alert.alert("Age confirmation required", "You must confirm that you are 18 or older.");
+      return;
+    }
     if (!email.trim() || !email.includes("@")) {
       Alert.alert("Check email", "Enter a valid email address.");
       return;
@@ -37,6 +51,10 @@ export default function RegisterScreen() {
   };
 
   const onGoogle = async () => {
+    if (!adultConfirmed) {
+      Alert.alert("Age confirmation required", "You must confirm that you are 18 or older.");
+      return;
+    }
     setGoogleLoading(true);
     try {
       if (!isSupabaseConfigured()) {
@@ -96,6 +114,37 @@ export default function RegisterScreen() {
               onChangeText={setPassword}
               placeholder="At least 8 characters"
             />
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityLabel="I confirm I am 18 or older"
+              accessibilityState={{ checked: adultConfirmed }}
+              onPress={() => setAdultConfirmed((value) => !value)}
+              style={{ flexDirection: "row", alignItems: "flex-start", gap: 10, paddingVertical: 8 }}
+            >
+              <Text style={[type.label, { color: colors.accent }]}>
+                {adultConfirmed ? "☑" : "☐"}
+              </Text>
+              <Text style={[type.caption, { color: colors.muted, flex: 1, lineHeight: 19 }]}>
+                I confirm I am 18 or older.
+              </Text>
+            </Pressable>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: -8 }}>
+              <Text style={[type.caption, { color: colors.muted }]}>Read our</Text>
+              <Text
+                style={[type.caption, { color: colors.ink, textDecorationLine: "underline" }]}
+                onPress={() => void Linking.openURL("https://brainlesshuman.com/terms")}
+              >
+                Terms
+              </Text>
+              <Text style={[type.caption, { color: colors.muted }]}>and</Text>
+              <Text
+                style={[type.caption, { color: colors.ink, textDecorationLine: "underline" }]}
+                onPress={() => void Linking.openURL("https://brainlesshuman.com/privacy")}
+              >
+                Privacy Policy
+              </Text>
+              <Text style={[type.caption, { color: colors.muted }]}>before continuing.</Text>
+            </View>
             <Button label="Create account" onPress={onSubmit} loading={loading} />
           </AuthCard>
         </ScrollView>

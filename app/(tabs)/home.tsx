@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -36,12 +36,12 @@ function replyIntent(message: ChatMessage): "changed" | "asking" | null {
   return null;
 }
 
-const SUGGESTIONS: Array<{
+const SUGGESTIONS: {
   tone: "mint" | "peach" | "sky" | "lilac";
   title: string;
   hint: string;
   prompt: string;
-}> = [
+}[] = [
   {
     tone: "mint",
     title: "Shape my day",
@@ -84,10 +84,6 @@ export default function HomeScreen() {
   const composerTarget = useTourTarget("composer");
   const suggestionsTarget = useTourTarget("suggestions");
   const accountTarget = useTourTarget("account");
-
-  useEffect(() => {
-    if (voice.status === "listening") setDraft(voice.liveText);
-  }, [voice.liveText, voice.status]);
 
   const load = useCallback(async () => {
     try {

@@ -67,7 +67,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiUrl": "http://10.231.60.212:8000/api/v1",
+      "apiUrl": "",
       "supabaseUrl": "",
       "supabaseAnonKey": ""
     }

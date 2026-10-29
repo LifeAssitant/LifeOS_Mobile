@@ -7,8 +7,17 @@ import * as SecureStore from "expo-secure-store";
  * so `localhost` is never used on device.
  */
 function resolveApiUrl(): string {
-  const extra = Constants.expoConfig?.extra as { apiUrl?: string } | undefined;
+  const extra = Constants.expoConfig?.extra as
+    | { apiUrl?: string; productionBuild?: boolean }
+    | undefined;
   const configured = extra?.apiUrl?.trim();
+
+  if (extra?.productionBuild) {
+    if (!configured || !configured.startsWith("https://")) {
+      throw new Error("LifeOS is missing its HTTPS API URL. Please install a correctly configured build.");
+    }
+    return configured;
+  }
 
   const hostUri =
     Constants.expoConfig?.hostUri ||
@@ -177,7 +186,6 @@ export type User = {
   google_calendar_connected?: boolean;
   profession?: string | null;
   professions?: string[] | null;
-  age?: number | null;
   busy_level?: number | null;
   use_cases?: string[] | null;
   profile_completed?: boolean;
@@ -185,7 +193,6 @@ export type User = {
 
 export type ProfileSurvey = {
   professions?: string[];
-  age?: number;
   busy_level?: number;
   use_cases?: string[];
 };
@@ -230,14 +237,14 @@ export type ChatMessage = {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
-  actions?: Array<{
+  actions?: {
     type: string;
     summary: string;
     entity_id?: string;
     undone?: boolean;
     undoable?: boolean;
     changed_schedule?: boolean;
-  }> | null;
+  }[] | null;
   linked_entity_ids?: string[] | null;
   created_at: string;
 };
@@ -253,19 +260,22 @@ export const api = {
   register: (email: string, password: string, display_name?: string) =>
     apiFetch<TokenPair>(
       "/auth/register",
-      { method: "POST", body: JSON.stringify({ email, password, display_name }) },
+      {
+        method: "POST",
+        body: JSON.stringify({ email, password, display_name, confirm_adult: true }),
+      },
       false
     ),
   login: (email: string, password: string) =>
     apiFetch<TokenPair>(
       "/auth/login",
-      { method: "POST", body: JSON.stringify({ email, password }) },
+      { method: "POST", body: JSON.stringify({ email, password, confirm_adult: true }) },
       false
     ),
   loginWithGoogle: (access_token: string) =>
     apiFetch<TokenPair>(
       "/auth/google",
-      { method: "POST", body: JSON.stringify({ access_token }) },
+      { method: "POST", body: JSON.stringify({ access_token, confirm_adult: true }) },
       false
     ),
   me: () => apiFetch<User>("/me"),

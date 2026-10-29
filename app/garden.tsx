@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import { AccessibilityInfo, Animated, Easing, Pressable, Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -13,7 +13,7 @@ export default function GardenEntry() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors, type, radii } = useTheme();
-  const slide = useRef(new Animated.Value(0)).current;
+  const [slide] = useState(() => new Animated.Value(0));
 
   useEffect(() => {
     let loop: Animated.CompositeAnimation | null = null;

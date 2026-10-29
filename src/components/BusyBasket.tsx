@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Animated,
   LayoutChangeEvent,
@@ -23,7 +23,7 @@ export const BUSY_LEVELS = [
 type PieceId = "book" | "mug" | "apple" | "clock" | "ball";
 
 /** Loose pieces start scattered around the basket, as fractions of the yard. */
-const PIECES: Array<{ id: PieceId; spot: { x: number; y: number } }> = [
+const PIECES: { id: PieceId; spot: { x: number; y: number } }[] = [
   { id: "book", spot: { x: 0.03, y: 0.02 } },
   { id: "mug", spot: { x: 0.36, y: 0.0 } },
   { id: "apple", spot: { x: 0.72, y: 0.05 } },
@@ -129,18 +129,19 @@ function DraggablePiece({
   start: { x: number; y: number };
   onDrop: (id: PieceId, x: number, y: number) => boolean;
 }) {
-  const home = useRef(start);
-  const pan = useRef(new Animated.ValueXY(start)).current;
+  const [home, setHome] = useState(start);
+  const [pan] = useState(() => new Animated.ValueXY(start));
   const [dragging, setDragging] = useState(false);
   const { colors, radii } = useTheme();
 
-  const responder = useRef(
+  const responder = useMemo(
+    () =>
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
         setDragging(true);
-        pan.setOffset({ ...home.current });
+        pan.setOffset({ ...home });
         pan.setValue({ x: 0, y: 0 });
       },
       onPanResponderMove: Animated.event([null, { dx: pan.x, dy: pan.y }], {
@@ -149,16 +150,17 @@ function DraggablePiece({
       onPanResponderRelease: (_evt, gesture) => {
         setDragging(false);
         pan.flattenOffset();
-        const x = home.current.x + gesture.dx;
-        const y = home.current.y + gesture.dy;
+        const x = home.x + gesture.dx;
+        const y = home.y + gesture.dy;
         // A tap without movement counts as "toss it in" — dragging is not the only way.
         const tapped = Math.abs(gesture.dx) < 6 && Math.abs(gesture.dy) < 6;
         const packed = onDrop(id, tapped ? -1 : x, tapped ? -1 : y);
         if (packed) return;
-        home.current = { x, y };
+        setHome({ x, y });
       },
-    })
-  ).current;
+    }),
+    [home, id, onDrop, pan]
+  );
 
   return (
     <Animated.View

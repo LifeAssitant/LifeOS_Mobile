@@ -89,9 +89,9 @@ function Inline({ text }: { text: string }) {
   const nodes: React.ReactNode[] = [];
   let last = 0;
   let match: RegExpExecArray | null;
-  INLINE.lastIndex = 0;
+  const inline = new RegExp(INLINE.source, INLINE.flags);
 
-  while ((match = INLINE.exec(text))) {
+  while ((match = inline.exec(text))) {
     if (match.index > last) nodes.push(text.slice(last, match.index));
     const key = `${match.index}`;
     const [, bold, boldAlt, italic, code] = match;

@@ -30,10 +30,6 @@ export default function SettingsScreen() {
     void getSpeakReplies().then(setSpeakRepliesOn);
   }, []);
 
-  useEffect(() => {
-    setCalendarConnected(Boolean(user?.google_calendar_connected));
-  }, [user?.google_calendar_connected]);
-
   useFocusEffect(
     useCallback(() => {
       void api
@@ -76,15 +72,6 @@ export default function SettingsScreen() {
       Alert.alert("Could not save", err instanceof Error ? err.message : "Try again");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const buyCredits = async () => {
-    try {
-      const { checkout_url } = await api.checkout();
-      await Linking.openURL(checkout_url);
-    } catch (err) {
-      Alert.alert("Billing", err instanceof Error ? err.message : "Stripe not configured yet");
     }
   };
 
@@ -276,7 +263,9 @@ export default function SettingsScreen() {
               placeholder={user?.has_byok_key ? "•••••••• (leave blank to keep)" : "AIza…"}
             />
           ) : (
-            <Button label="Buy credits" variant="ghost" onPress={() => void buyCredits()} />
+            <Text style={[type.caption, { color: colors.muted, lineHeight: 18 }]}>
+              Paid credit packs are not available yet. You will not be charged.
+            </Text>
           )}
         </Panel>
 
