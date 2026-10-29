@@ -11,7 +11,7 @@ import { clayInset, clayRaised, spacing } from "../../src/theme/tokens";
 import { getSpeakReplies, setSpeakReplies, stopSpeaking } from "../../src/voice";
 
 export default function SettingsScreen() {
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, deleteAccount, refreshUser } = useAuth();
   const { colors, radii, type } = useTheme();
   const router = useRouter();
   const { start: startTour } = useTour();
@@ -25,6 +25,7 @@ export default function SettingsScreen() {
   const [calendarBusy, setCalendarBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [speakReplies, setSpeakRepliesOn] = useState(true);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   useEffect(() => {
     void getSpeakReplies().then(setSpeakRepliesOn);
@@ -113,6 +114,36 @@ export default function SettingsScreen() {
     } finally {
       setCalendarBusy(false);
     }
+  };
+
+  const confirmDeleteAccount = () => {
+    Alert.alert(
+      "Delete your account?",
+      "This permanently deletes your LifeOS profile, tasks, events, chat history, reminders, and saved settings. This cannot be undone. Google Calendar access may need to be revoked separately in your Google account.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete account",
+          style: "destructive",
+          onPress: () => {
+            void (async () => {
+              setDeletingAccount(true);
+              try {
+                await deleteAccount();
+                router.replace("/(auth)/login");
+              } catch (err) {
+                Alert.alert(
+                  "Could not delete account",
+                  err instanceof Error ? err.message : "Please try again or contact support."
+                );
+              } finally {
+                setDeletingAccount(false);
+              }
+            })();
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -306,6 +337,20 @@ export default function SettingsScreen() {
         </Panel>
 
         <Button label="Save changes" onPress={() => void saveAi()} loading={saving} />
+        <Panel>
+          <Text style={[type.heading, { color: colors.ink, marginBottom: 4 }]}>
+            Delete account
+          </Text>
+          <Text style={[type.caption, { color: colors.muted, marginBottom: 12, lineHeight: 18 }]}>
+            Permanently remove your LifeOS account and data. This cannot be undone.
+          </Text>
+          <Button
+            label={deletingAccount ? "Deleting…" : "Delete my account"}
+            variant="danger"
+            disabled={deletingAccount}
+            onPress={confirmDeleteAccount}
+          />
+        </Panel>
         <Button label="Sign out" variant="danger" onPress={() => void logout()} />
         <View style={{ height: spacing.xl }} />
       </ScrollView>

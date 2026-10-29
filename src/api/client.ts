@@ -279,6 +279,7 @@ export const api = {
       false
     ),
   me: () => apiFetch<User>("/me"),
+  deleteAccount: () => apiFetch<void>("/me", { method: "DELETE" }),
   updateMe: (body: Partial<User> & Record<string, unknown>) =>
     apiFetch<User>("/me", { method: "PATCH", body: JSON.stringify(body) }),
   saveProfile: (body: ProfileSurvey) =>

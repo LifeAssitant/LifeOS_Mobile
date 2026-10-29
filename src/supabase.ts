@@ -28,6 +28,7 @@ export function getSupabase(): SupabaseClient {
       "Supabase is not configured. Set expo.extra.supabaseUrl and supabaseAnonKey in app.json"
     );
   }
+
   if (!client) {
     client = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
@@ -38,6 +39,12 @@ export function getSupabase(): SupabaseClient {
     });
   }
   return client;
+}
+
+export async function signOutSupabase(): Promise<void> {
+  if (!isSupabaseConfigured()) return;
+  const { error } = await getSupabase().auth.signOut({ scope: "local" });
+  if (error) throw error;
 }
 
 export function parseAuthDeepLink(url: string): URLSearchParams {

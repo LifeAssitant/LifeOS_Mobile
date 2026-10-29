@@ -7,6 +7,9 @@ Matches the desktop app: Clay/Glass × Light/Dark themes, Google sign-in, Google
 Email and Google sign-in require an 18+ self-declaration; LifeOS does not ask for
 date of birth. Paid credit purchases and subscriptions are disabled at launch.
 Confirm the age policy with qualified counsel before accepting public users.
+Email/password recovery opens the LifeOS website and requires SMTP delivery to be
+configured on the backend. Reset links expire after 30 minutes and resetting a
+password signs out existing sessions.
 
 ## Setup
 

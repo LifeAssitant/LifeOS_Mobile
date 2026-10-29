@@ -15,7 +15,12 @@ import {
   saveTokens,
   User,
 } from "../api/client";
-import { isSupabaseConfigured, sessionFromDeepLink, startGoogleOAuth } from "../supabase";
+import {
+  isSupabaseConfigured,
+  sessionFromDeepLink,
+  signOutSupabase,
+  startGoogleOAuth,
+} from "../supabase";
 
 type AuthState = {
   user: User | null;
@@ -25,6 +30,7 @@ type AuthState = {
   register: (email: string, password: string, name?: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   refreshUser: () => Promise<void>;
   setOfflineHint: (msg: string | null) => void;
 };
@@ -134,6 +140,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    await api.deleteAccount();
+    await clearTokens();
+    setUser(null);
+    await signOutSupabase();
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
@@ -143,10 +156,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       register,
       loginWithGoogle,
       logout,
+      deleteAccount,
       refreshUser,
       setOfflineHint,
     }),
-    [user, loading, offlineHint, login, register, loginWithGoogle, logout, refreshUser]
+    [
+      user,
+      loading,
+      offlineHint,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      deleteAccount,
+      refreshUser,
+    ]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

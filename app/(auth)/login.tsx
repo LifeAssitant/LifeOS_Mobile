@@ -105,6 +105,18 @@ export default function LoginScreen() {
               placeholder="••••••••"
             />
             <Pressable
+              accessibilityRole="link"
+              onPress={() =>
+                void Linking.openURL(
+                  `https://brainlesshuman.com/reset-password?email=${encodeURIComponent(email)}`,
+                )
+              }
+            >
+              <Text style={[type.caption, { color: colors.ink, textAlign: "right" }]}>
+                Forgot password?
+              </Text>
+            </Pressable>
+            <Pressable
               accessibilityRole="checkbox"
               accessibilityLabel="I confirm I am 18 or older"
               accessibilityState={{ checked: adultConfirmed }}
